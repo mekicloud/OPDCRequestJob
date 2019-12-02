@@ -24,7 +24,7 @@ $this->title = 'ใบคำร้อง';
       <div class="panel-body">
         <ul class="list-group">
           <li class="list-group-item">คุณ : <?= $session->get('username') ?></li>
-          <li class="list-group-item"><i class="fab fa-line fa-5x" style="<?= (empty($userdata['access_token']) ? "" : "color: green"); ?>"></i> สถานะ : <?= (empty($userdata['access_token']) ? "<i class='text text-danger'>ยังไม่ลงทะเบียน</i>" : "ลงทะเบียนแล้ว"); ?></li>
+          <li class="list-group-item"><i class="fab fa-line fa-2x" style="<?= (empty($userdata['access_token']) ? "" : "color: green"); ?>"></i> สถานะ : <?= (empty($userdata['access_token']) ? "<i class='text text-danger'>ยังไม่ลงทะเบียน</i>" : "ลงทะเบียนแล้ว"); ?></li>
         </ul>
         <div class="alert alert-success" role="alert"><a href="<?= Yii::getAlias('@web') . '/uploads/RegisterLine.pdf'; ?>" target="_blank"><span class="glyphicon glyphicon-link" aria-hidden="true"></span> ขั้นตอนการลงทะเบียน</a></div>
         <div class="alert alert-warning" role="alert">หมายเหตุ : คุณสามารถลงทะเบียนซ้ำได้ กรณีลบการแจ้งเตือนออกหรือเปลี่ยนบัญชี Line <?= (empty($userdata['access_token']) ? Html::a('คลิกที่นี่', $result, ['class' => 'btn btn-default btn-xs disabled']) : Html::a('คลิกที่นี่', $result, ['class' => 'btn btn-warning btn-xs'])); ?></div>
