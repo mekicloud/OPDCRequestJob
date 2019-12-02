@@ -63,7 +63,7 @@ AppAsset::register($this);
                     ['label' => 'จัดการผู้ดูแลระบบ', 'url' => ['/admin/index']],
                     ['label' => 'รายการอนุมัติ', 'url' => ['/taskapproved/index']],
                     //['label' => 'ผู้ใช้งาน '.$session->get('username'), 'url' => ['#']],
-                    ['label' => 'ผู้ใช้งาน '.$session->get('username')."AdminType = ".$data,
+                    ['label' => 'ผู้ใช้งาน '.$session->get('username'),
                         'url' => ['#'],
                         'template' => '<a href="{url}" >{label}<i class="fa fa-angle-left pull-right"></i></a>',
                         'items' => [
