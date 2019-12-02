@@ -11,6 +11,7 @@ use yii\bootstrap\NavBar;
 use yii\widgets\Breadcrumbs;
 use app\assets\AppAsset;
 use yii\helpers\Url;
+use app\models\FunctionConfig;
 
 AppAsset::register($this);
 ?>
@@ -43,10 +44,14 @@ AppAsset::register($this);
        
     if(!empty($session->get('UID'))){
         $id = $session->get('UID');
+        
+        //$getFunction = new FunctionConfig();
+        //$getId = $getFunction->Decryption($session->get('UID'));
+        
         $data = Yii::$app->db->createCommand("SELECT admin_type FROM m_task_admin WHERE user_id ='$id'")->queryScalar();
         //echo "adtype: ".$data;
 
-        if($data <= 2){
+        if(!empty($data) && $data <= 2){
             echo Nav::widget([
                 'options' => ['class' => 'navbar-nav navbar-right'],
                 'items' => [
@@ -58,7 +63,7 @@ AppAsset::register($this);
                     ['label' => 'จัดการผู้ดูแลระบบ', 'url' => ['/admin/index']],
                     ['label' => 'รายการอนุมัติ', 'url' => ['/taskapproved/index']],
                     //['label' => 'ผู้ใช้งาน '.$session->get('username'), 'url' => ['#']],
-                    ['label' => 'ผู้ใช้งาน '.$session->get('username'),
+                    ['label' => 'ผู้ใช้งาน '.$session->get('username')."AdminType = ".$data,
                         'url' => ['#'],
                         'template' => '<a href="{url}" >{label}<i class="fa fa-angle-left pull-right"></i></a>',
                         'items' => [
