@@ -25,7 +25,7 @@ use yii\web\JsExpression;
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <div class="col-lg-12 col-md-12 col-xs-12">
+    <div class="row col-lg-12 col-md-12 col-xs-12" style="padding-left:30px;padding-right:30px">
         <?= Html::activeDropDownList(
             $model,
             'typej_id',
@@ -34,7 +34,7 @@ use yii\web\JsExpression;
         ) ?>
     </div>
 
-    <div class="col-lg-12 col-md-12 col-xs-12">
+    <div class="row col-lg-12 col-md-12 col-xs-12" style="padding-left:30px;padding-right:30px">
         <?= $form->field($model, 'task_detail')->textarea([
             'maxlength' => true,
             'placeholder' => 'รายละเอียด',
@@ -43,7 +43,7 @@ use yii\web\JsExpression;
     </div>
 
 
-    <div class="col-lg-12 col-md-12 col-xs-12">
+    <div class="row col-lg-12 col-md-12 col-xs-12">
         <div class="col-lg-12 col-md-12 col-xs-12">
             <?php echo DatePicker::widget([
                 'model' => $model,
@@ -68,13 +68,11 @@ use yii\web\JsExpression;
                 ]
             ]);
             ?>
-
-
         </div>
     </div>
 
-    <div class="col-lg-12 col-md-12 col-xs-12">
-        <div class="col-lg-6 col-md-6 col-xs-6">
+    <div class="row col-lg-12 col-md-12 col-xs-12">
+        <div class="col-lg-6 col-md-6 col-xs-6" style="margin-top: 15px">
             <?php
 
             echo TimePicker::widget([
@@ -84,7 +82,7 @@ use yii\web\JsExpression;
                 'pluginOptions' => [
                     'showSeconds' => false,
                     'showMeridian' => false,
-                    'minuteStep' => 1,
+                    'minuteStep' => 5,
                     'secondStep' => 5,
 
                 ]
@@ -92,7 +90,7 @@ use yii\web\JsExpression;
             ?>
 
         </div>
-        <div class="col-lg-6 col-md-6 col-xs-6">
+        <div class="col-lg-6 col-md-6 col-xs-6" style="margin-top: 15px;">
             <?php
             echo TimePicker::widget([
                 'name' => 't1',
@@ -101,14 +99,14 @@ use yii\web\JsExpression;
                 'pluginOptions' => [
                     'showSeconds' => false,
                     'showMeridian' => false,
-                    'minuteStep' => 1,
+                    'minuteStep' => 5,
                     'secondStep' => 5,
                 ]
             ]);
             ?>
         </div>
     </div>
-    <div class="col-lg-12 col-md-12 col-xs-12">
+    <div class="row col-lg-12 col-md-12 col-xs-12">
         <div class="col-lg-8 col-md-12 col-xs-12">
             <?= $form->field($model, 'task_location')->textInput([
                 'maxlength' => true,
@@ -122,8 +120,10 @@ use yii\web\JsExpression;
             ])->label('') ?>
         </div>
     </div>
-    <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+    <div class="row col-lg-12 col-md-12 col-xs-12">
+        <div class="form-group col-lg-12 col-md-12 col-xs-12">
+            <?= Html::submitButton('บันทึก', ['class' => 'btn btn-success btn-block']) ?>
+        </div>
     </div>
 
     <?php ActiveForm::end(); ?>

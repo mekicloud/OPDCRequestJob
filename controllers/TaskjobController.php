@@ -15,7 +15,7 @@ use app\models\TaskApproved;
 use app\models\RankUser;
 use yii\data\SqlDataProvider;
 use yii\db\Query;
-
+use app\models\TaskAssign;
 
 use app\models\LineMember;
 use app\models\TaskAssignSearch;
@@ -36,7 +36,7 @@ class TaskjobController extends Controller
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
-                    'delete' => ['POST'],
+                   // 'delete' => ['POST'],
                 ],
             ],
         ];
@@ -52,15 +52,18 @@ class TaskjobController extends Controller
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
         $approveStatus = Yii::$app->db->createCommand("SELECT case when approved1 = 1
             then 1 when approved2 = 1
-            then 2 when approved3 = 1 
-            then 3 else 0 end AS appr 
+            then 2 when approved3 = 1
+            then 3 else 0 end AS appr
             FROM t_task_approved apr")
             ->queryOne();
+        $model = new TaskJob();
+        $user_data = $model->get_user_assign();
+        //var_dump($user_data);
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'aprStatus' => $approveStatus,
-            //'count' => $count
+            'user_data' => $user_data,
         ]);
     }
 
@@ -78,7 +81,7 @@ class TaskjobController extends Controller
     public function actionView($id)
     {
 
-        return $this->render('view', [
+        return $this->renderAjax('view', [
             'model' => $this->findModel($id),
         ]);
     }
@@ -96,38 +99,38 @@ class TaskjobController extends Controller
             tj.task_id
             ,utj.typej_detail
             ,DATENAME(day, tj.task_date_start) AS date_num
-		    ,CASE WHEN DATENAME(weekday, tj.task_date_start) = 'Monday' THEN 'จันทร์' 
-									WHEN DATENAME(weekday, tj.task_date_start) = 'Thursday' THEN 'อังคาร' 
-									WHEN DATENAME(weekday, tj.task_date_start) = 'Wednesday' THEN 'พุธ' 
-									WHEN DATENAME(weekday, tj.task_date_start) = 'Tuesday' THEN 'พฤหัสบดี' 
-									WHEN DATENAME(weekday, tj.task_date_start) = 'Friday' THEN 'ศุกร์' 
-                                    WHEN DATENAME(weekday, tj.task_date_start) = 'Saterday' THEN 'เสาร์' 
-                                    WHEN DATENAME(weekday, tj.task_date_start) = 'Sunday' THEN 'อาทิตย์' 
+		    ,CASE WHEN DATENAME(weekday, tj.task_date_start) = 'Monday' THEN 'จันทร์'
+									WHEN DATENAME(weekday, tj.task_date_start) = 'Thursday' THEN 'อังคาร'
+									WHEN DATENAME(weekday, tj.task_date_start) = 'Wednesday' THEN 'พุธ'
+									WHEN DATENAME(weekday, tj.task_date_start) = 'Tuesday' THEN 'พฤหัสบดี'
+									WHEN DATENAME(weekday, tj.task_date_start) = 'Friday' THEN 'ศุกร์'
+                                    WHEN DATENAME(weekday, tj.task_date_start) = 'Saterday' THEN 'เสาร์'
+                                    WHEN DATENAME(weekday, tj.task_date_start) = 'Sunday' THEN 'อาทิตย์'
 						ELSE '' END AS date_name
                         ,CASE WHEN DATENAME(weekday, tj.task_date_start) = 'Monday' THEN 2
 									WHEN DATENAME(weekday, tj.task_date_start) = 'Thursday' THEN 3
 									WHEN DATENAME(weekday, tj.task_date_start) = 'Wednesday' THEN 4
-									WHEN DATENAME(weekday, tj.task_date_start) = 'Tuesday' THEN 5 
+									WHEN DATENAME(weekday, tj.task_date_start) = 'Tuesday' THEN 5
 									WHEN DATENAME(weekday, tj.task_date_start) = 'Friday' THEN 6
-                                    WHEN DATENAME(weekday, tj.task_date_start) = 'Saterday' THEN 7 
-                                    WHEN DATENAME(weekday, tj.task_date_start) = 'Sunday' THEN 1 
+                                    WHEN DATENAME(weekday, tj.task_date_start) = 'Saterday' THEN 7
+                                    WHEN DATENAME(weekday, tj.task_date_start) = 'Sunday' THEN 1
 						ELSE '' END AS date_no
             ,tj.task_date_start
             ,SUBSTRING(CONVERT(VARCHAR, tj.task_time_start),1,8) AS time_start
             ,tj.task_date_end
             ,SUBSTRING(CONVERT(VARCHAR, tj.task_time_end),1,8) AS time_end
-            ,CASE WHEN utj.unit_id = 1 THEN 'primary' 
-				WHEN utj.unit_id = 2 THEN 'danger'
+            ,CASE WHEN utj.unit_id = 43 THEN 'primary'
+				WHEN utj.unit_id = 41 THEN 'danger'
 				ELSE '' END tj_color
-            ,CASE WHEN utj.unit_id = 1 THEN 'กลุ่มงานเทคโนโลยีสารสนเทศ' 
-				WHEN utj.unit_id = 2 THEN 'กลุ่มงานเลาขานุการ ก.พ.ร. และการประชาสัมพันธ์'
+            ,CASE WHEN utj.unit_id = 43 THEN 'กลุ่มงานเทคโนโลยีสารสนเทศ'
+				WHEN utj.unit_id = 41 THEN 'กลุ่มงานเลาขานุการ ก.พ.ร. และการประชาสัมพันธ์'
 				ELSE '' END tj_org
             ,tj.task_location
             FROM
             t_task_job tj
             LEFT JOIN t_task_approved ta ON tj.task_id = ta.task_id
             LEFT JOIN m_unit_typejob utj ON tj.typej_id = utj.typej_id
-            WHERE tj.task_date_start >= {fn curdate()} 
+            WHERE tj.task_date_start >= {fn curdate()}
 		    ORDER BY tj.task_date_start ASC
             ";
 
@@ -135,13 +138,13 @@ class TaskjobController extends Controller
 
             $date_timeline = "SELECT DISTINCT
             task_date_start
-            ,CASE WHEN DATENAME(weekday, tj.task_date_start) = 'Monday' THEN 'จันทร์' 
-                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Tuesday' THEN 'อังคาร' 
-                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Wednesday' THEN 'พุธ' 
-                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Thursday' THEN 'พฤหัสบดี' 
-                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Friday' THEN 'ศุกร์' 
-                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Saterday' THEN 'เสาร์' 
-                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Sunday' THEN 'อาทิตย์' 
+            ,CASE WHEN DATENAME(weekday, tj.task_date_start) = 'Monday' THEN 'จันทร์'
+                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Tuesday' THEN 'อังคาร'
+                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Wednesday' THEN 'พุธ'
+                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Thursday' THEN 'พฤหัสบดี'
+                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Friday' THEN 'ศุกร์'
+                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Saterday' THEN 'เสาร์'
+                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Sunday' THEN 'อาทิตย์'
                                     ELSE '' END AS date_name
             FROM
             t_task_job tj
@@ -153,6 +156,11 @@ class TaskjobController extends Controller
             $getFunction = new FunctionConfig();
             $getCurMount = $getFunction->getThaiMonth(date('m'));
             $getCurYear = $getFunction->getThaiYear();
+            
+                
+           
+       
+
         foreach ($date_tl as $rs_tl) {
             //echo "<br><br><br>" . $rs_tl['task_date_start'];
             foreach ($times as $time2d) {
@@ -167,18 +175,13 @@ class TaskjobController extends Controller
                     $timeline[$d_start][$r] = $time2d;
                     $r++;
                 }
-                    
-                
+
+
             }
         }
+        
 
-            //$zQuery = "";
-           // print_r($timeline);
-           
-       
-      // echo "<br><br><br>";
-      // print_r($row);
-      
+
         return $this->render('timeline', [
             'times' => $times,
              'curMount' => $getCurMount,
@@ -186,11 +189,11 @@ class TaskjobController extends Controller
             'timeline2' => $timeline,
             'd_timeline' => $date_tl
         ]);
-        
-    }
-    
 
-    public function actionCapt($id)
+    }
+
+
+    public function actionAssign($id)
     {
         $model = new TaskAssignSearch();
         // echo "<br><br><br><br><br>" . $model->task_detail;
@@ -227,56 +230,23 @@ class TaskjobController extends Controller
                     'task_order_time' => date("H:i"),
                     'task_location' => $model['task_location'],
                     'task_personal' => $model['task_personal'],
+                    'task_status' => 1,
                 ])->execute();
-            //Create task_approved for rank capt
-            $leader_type = $this->checkrank();
-
-            $this->createCapt($leader_type);
-
-
+            //Create task_approved
+            $leader_type = $this->getRank();
+            $this->createApproved($leader_type);
             $uuid = $session->get('UID');
-            $token_user = $this->getAccessToken($uuid);
-            $capt_id = $this->getCapt($uuid);
-            $token_capt = $this->getAccessToken($capt_id);
-            $messages_user = "บันทึกใบคำร้องสำเร็จ";
-            $messages_capt = "";
-            //Line Notify User
-            $this->actionNotify($token_user, $messages_user);
-            //Line Notify Capt
-            $this->actionNotify($token_user, $messages_user);
-
-            if (!empty($leader_type and $leader_type != Null)) {
-                $this->createCapt($leader_type);
-            }
-            //if($taskjob){
-
-            $uuid = $session->get('UID');
-            $token_user = $this->getAccessToken($uuid);
-            $capt_id = $this->getCapt($uuid);
-            $token_capt = $this->getAccessToken($capt_id);
-            $messages_user = "บันทึกใบคำร้องสำเร็จ";
-            $messages_capt = "มีใบคำร้องรอการอนุญาติจาก ผอ กอง"; //ผอ กอง
-            $messages_capt2 = "มีใบคำร้องรอการอนุมัติจาก ผอ สลธ"; // ผอ สลธ
-            $messages_boss = "มีใบคำร้องรอการมอบหมายงาน"; // หัวหน้างาน
-            $messages_worker = "มีใบคำร้องที่ต้องปฏิบัติหน้าที่";
-            //Line Notify User
-            $this->actionNotify($token_user, $messages_user);
-            //Line Notify Capt
-            $this->actionNotify($token_capt, $messages_capt);
-            //var_dump($Linemember);
-
-            //}
-
-
+            $boss_id = $this->getBoss($uuid);
+            $token_boss = $this->getAccessToken($boss_id);
+            $messages_boss = "มีใบคำร้องเข้ามาใหม่ที่รอการอนุมัติจาก ผอ.กอง";
+            $this->actionNotify($token_boss,$messages_boss);
+            
             $session->close();  // close a session
-                // echo '<script type="text/javascript">',
-                // 'jsfunction();',
-                // '</script>'
-            ;
+
             return $this->redirect(['index']);
         }
 
-        return $this->render('create', [
+        return $this->renderAjax('create', [
             'model' => $model,
         ]);
     }
@@ -291,26 +261,27 @@ class TaskjobController extends Controller
     public function getCapt($id)
     { //user_id
 
-
         $sql = "select t_leader.org_id,
         org_name,
         parent_id ,
         leader_id ,
         leader_type ,
-        case when (leader_type > 4) then (select top 1 user_id from t_leader where org_id = parent_id and leader_type = 4) else user_id end as user_id 
+        case when (leader_type > 4) then (select top 1 user_id from t_leader where org_id = parent_id and leader_type = 4) else user_id end as user_id
         from m_org_inner
         inner join t_leader on m_org_inner.org_id  = t_leader.org_id
         where leader_type > 3
         and t_leader.org_id = (select cont_to_id from m_user where user_id = $id)
         order by leader_type";
 
-        $sql = "select * from m_rank_user where 
-        rank_name like concat('%',(select cont_to from m_user where user_id = '$id'),'%')";
+        // $sql = "select * from m_rank_user where
+        // rank_name like concat('%',(select cont_to from m_user where user_id = '$id'),'%')";
 
         $capt_user = Yii::$app->db->createCommand($sql)->queryOne();
         $capt = $capt_user["user_id"];
         return $capt;
     }
+
+
 
     public function getMessage($id)
     {
@@ -318,7 +289,7 @@ class TaskjobController extends Controller
         return $mes;
     }
 
-    public function checkRank()
+    public function getRank()
     {
         $session = Yii::$app->session;
         $session->open(); // open a session
@@ -330,7 +301,7 @@ class TaskjobController extends Controller
         return $rankUser['leader_type'];
     }
 
-    public function createCapt($leader_type)
+    public function createApproved($leader_type)
     {
         $task = Yii::$app->db->createCommand('SELECT Top 1 task_id FROM t_task_job order by task_id desc')
             ->queryOne();
@@ -367,6 +338,7 @@ class TaskjobController extends Controller
         } elseif (
             $cont_to_id == 54 or $cont_to_id == 55 or $cont_to_id == 56 or $cont_to_id == 57 or $cont_to_id == 58 or $cont_to_id == 59
             or $cont_to_id == 60 or $cont_to_id == 76 or $cont_to_id == 77 or $cont_to_id == 100 or $cont_to_id == 103
+            or ($cont_to_id == 45 and $leader_type == 6)
         ) {
             Yii::$app->db->createCommand()
                 ->insert('t_task_approved', [
@@ -398,7 +370,7 @@ class TaskjobController extends Controller
             return $this->redirect(['view', 'id' => $model->task_id]);
         }
 
-        return $this->render('update', [
+        return $this->renderAjax('update', [
             'model' => $model,
         ]);
     }
@@ -410,11 +382,43 @@ class TaskjobController extends Controller
      * @return mixed
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionDelete($id)
+    public function actionDisable($id)
     {
-        $this->findModel($id)->delete();
+        // Yii::$app->session->setFlash(\dominus77\sweetalert2\Alert::TYPE_SUCCESS, 'Congratulations!');
+        $model = $this->findModel($id);
+        $model->task_status = '0';
+        $model->save();
+        return $this->redirect('index');
 
-        return $this->redirect(['index']);
+    }
+
+    public function getLeader($lt,$org){
+        $sql="
+        SELECT user_id FROM t_leader WHERE leader_type = ".$lt." and org_id = ".$org."
+        ";
+        $leader = Yii::$app->db->createCommand($sql)->queryScalar();
+        return $leader;
+    }
+    public function getBoss($user_id){
+        $sql="
+        select top 1 m_user.user_id from m_org_inner
+inner join m_user on m_user.cont_to_id = m_org_inner.org_id
+inner join t_leader on m_user.user_id = t_leader.user_id
+where t_leader.org_id = (select cont_to_id from m_user where user_id = ".$user_id.") and leader_type != 5
+order by leader_type asc
+        ";
+        $boss = Yii::$app->db->createCommand($sql)->queryScalar();
+        return $boss;
+    }
+
+    public function getAssign($task_id){
+        $sql = "
+        select user_id from t_task_job left join m_unit_typejob on t_task_job.typej_id = m_unit_typejob.typej_id
+left join t_leader on m_unit_typejob.unit_id = t_leader.org_id 
+where leader_type = 6 and task_id = ".$task_id."
+        ";
+        $boss = Yii::$app->db->createCommand($sql)->queryScalar();
+        return $assign_id;
     }
 
     public function actionApproved($id)
@@ -422,63 +426,12 @@ class TaskjobController extends Controller
         date_default_timezone_set("Asia/Bangkok");
         $session = Yii::$app->session;
         $session->open(); // open a session
-        $uid = $session->get('UID');
-
-        $rankUser = Yii::$app->db->createCommand('SELECT org_id ,leader_type FROM t_leader WHERE user_id=:id')
+        //$uid = $session->get('UID');
+        $rankUser = Yii::$app->db->createCommand('SELECT org_id ,leader_type,user_id FROM t_leader WHERE user_id=:id')
             ->bindValue(':id', $session->get('UID'))
             ->queryOne();
 
-        $model = $this->findModel($id);
-        $rankApproved = TaskApproved::find()->where(['task_id' => $model->task_id])->all();
-        if (empty($rankApproved)) {
-
-            //$insert support create error
-            if ($rankUser['leader_type'] == 4 and $rankUser['org_id'] == 37) {
-
-                //$insert
-
-                if ($rankUser['rank_priority'] == 5) { //
-                    if ($rankUser['leader_type'] == 4 and $rankUser['leader_id'] == 70) {
-
-
-                        Yii::$app->db->createCommand()
-                            ->insert('t_task_approved', [
-                                'task_id' => $id,
-                                'approved1' =>  '1',
-                                'approved1_date' => date('Y-m-d'),
-                                'approved1_time' => date("H:i"),
-                                'approved2' =>  '1',
-                                'approved2_date' => date('Y-m-d'),
-                                'approved2_time' => date("H:i"),
-                            ])->execute();
-                    } else  if ($rankUser['leader_type'] == 4) {
-                        Yii::$app->db->createCommand()
-                            ->insert('t_task_approved', [
-                                'task_id' => $id,
-                                'approved1' =>  '1',
-                                'approved1_date' => date('Y-m-d'),
-                                'approved1_time' => date("H:i"),
-
-                            ])->execute();
-                    } else { }
-                } else {
-
-                    if ($rankUser['leader_type'] == 4 and $rankUser['org_id'] == 37) { // ผอ สลธ
-
-                        if ($rankUser['rank_priority'] == 5) { //พี่อู๋
-
-                            if ($rankUser['leader_type'] == 4 and $rankUser['leader_id'] == 70) {
-                                Yii::$app->db->createCommand()
-                                    ->update(
-                                        't_task_approved',
-                                        [
-                                            'approved1' =>  '1',
-                                            'approved1_date' => date('Y-m-d'),
-                                            'approved1_time' => date("H:i"),
-                                        ],
-                                        'task_id = ' . $id
-                                    )->execute();
-                            } else  if ($rankUser['rank_priority'] < 5) { //
+                            if ($rankUser['leader_type'] == 4 and $rankUser['org_id'] == 37) {
                                 Yii::$app->db->createCommand()
                                     ->update(
                                         't_task_approved',
@@ -489,6 +442,37 @@ class TaskjobController extends Controller
                                         ],
                                         'task_id = ' . $id
                                     )->execute();
+                                    //send message to task_owner
+                                    $task_owner_id = $this->getTaskOwner($id);
+                                    $token_o = $this->getAccessToken($task_owner_id);
+                                    $messages_tj_owner = "ใบคำร้องของท่านลำดับที่ ".$id." ได้รับการอนุมัติจาก ผอ.สลธ แล้ว";
+                                    $this->actionNotify($token_o, $messages_tj_owner);
+                                    //send message to capt
+                                    $assign_capt_id = $this->getAssign($id);
+                                    $token_capt = $this->getAccessToken($assign_capt_id);
+                                    $messages_leader6 = "มีใบคำร้องเข้ามาใหม่ที่รอการมอบหมายงานให้เจ้าหน้าที่";
+                                    $this->actionNotify($token_capt, $messages_leader6);
+                            } else  if ($rankUser['leader_type'] < 5) { //
+                                Yii::$app->db->createCommand()
+                                    ->update(
+                                        't_task_approved',
+                                        [
+                                            'approved1' =>  '1',
+                                            'approved1_date' => date('Y-m-d'),
+                                            'approved1_time' => date("H:i"),
+                                        ],
+                                        'task_id = ' . $id
+                                    )->execute();
+                                    //send message to task_owner
+                                    $task_owner_id = $this->getTaskOwner($id);
+                                    $token_o = $this->getAccessToken($task_owner_id);
+                                    $messages_tj_owner = "ใบคำร้องของท่านลำดับที่ ".$id." ได้รับการอนุญาตจากผู้บังคับบัญชาแล้ว";
+                                    $this->actionNotify($token_o, $messages_tj_owner);
+                                    //send message to ผอ สลธ
+                                    $leader = $this->getLeader(4,37);
+                                    $token_l = $this->getAccessToken($leader);
+                                    $messages_leader4 = "มีใบคำร้องเข้ามาใหม่ที่รอการอนุมัติจาก ผอ.สลธ";
+                                    $this->actionNotify($token_l, $messages_leader4);
                             } else if ($rankUser['leader_type'] == 6) { // หัวหน้ากลุ่มงาน
                                 Yii::$app->db->createCommand()
                                     ->update(
@@ -500,6 +484,7 @@ class TaskjobController extends Controller
                                         ],
                                         'task_id = ' . $id
                                     )->execute();
+                          
                             } else if ($rankUser['leader_type'] == 4) { //ผอ กอง
                                 Yii::$app->db->createCommand()
                                     ->update(
@@ -512,19 +497,12 @@ class TaskjobController extends Controller
                                         'task_id = ' . $id
                                     )->execute();
                             }
-                        }
-                        $model->save();
                         $session->close();  // close a session
-                        $token = "";
-                        $messages = "";
-                        $this->actionNotify($token, $messages);
-                        return $this->redirect(['index', 'task_id' => $id]);
-                        // echo ($id);
-                    }
-                }
-            }
+    
+                        
+                        return $this->redirect(['index', '']);
         }
-    }
+
     /**
      * Finds the TaskJob model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
@@ -544,7 +522,8 @@ class TaskjobController extends Controller
     public function actionNotify($token, $messages)
     {
         if (empty($token)) {
-            $token = "c5PYwqT8uSuu2PxLuNINJzCLpVQWQysLcXD8Rm6zMqU"; //Line ตัวเองใช้ทดสอบ
+            //$token = "ugkFwVhF5Kxi61n9S9BCae1CKOPzpd1ckMpeCjkGA3q"; //mek Line ตัวเองใช้ทดสอบ
+            $token = "X1dsI7m58upkMbSpSxwaViejSToE7925VaJjZzvcFjw"; //note
         }
         $api_url = 'https://notify-api.line.me/api/notify';
 
@@ -676,4 +655,70 @@ class TaskjobController extends Controller
             'data' => $return_data
         ]);
     }
+
+    public function getTaskOwner($task_id){
+        $task_owner = Yii::$app->db->createCommand("SELECT task_owner FROM t_task_job WHERE task_id = $task_id")->queryScalar();
+        return $task_owner;
+    }
+
+    public function actionAssignsp(){
+       $task_id = Yii::$app->request->post('task_id');
+       $data_user = Yii::$app->request->post('data_user');
+       $count_a = count($data_user);
+        for($i = 0 ; $i < $count_a ; $i++){
+                $sql = "insert into t_task_assign (task_id,user_id) values ('".$task_id."','".$data_user[$i]."')";
+                Yii::$app->db->createCommand($sql)->execute();
+        }
+            $this->actionApproved($task_id); 
+            $task_detail = $this->getTaskdetail($task_id);
+            $assign_user = $this->getAssignuser($task_id);
+            $username = "";
+            $i = 1;
+            foreach ($assign_user as $assign_rs) {
+               $username = $username." (".$i.")".$assign_rs['user_name'];
+               $i++;
+            }
+            $messages_user = "งาน ".$task_detail['tj_detail']." วันที่ ".$task_detail['tj_date']."หัวหน้างาน Assign เจ้าหน้าที่เรียบร้อย...";
+            $messages_groupIT = "งาน ".$task_detail['tj_detail']." วันที่ ".$task_detail['tj_date']." หัวหน้างาน Assign เจ้าหน้าคือ ".$username;
+            $task_owner = $this->getTaskOwner($task_id);
+            $token_task_owner = $this->getAccessToken($task_owner);
+            $token_it = "";
+            //Line Notify Assign to Task_Owner
+            $this->actionNotify($token_task_owner, $messages_user);
+            //Line Notify Assign to GroupIT
+            $this->actionNotify($token_it, $messages_groupIT);
+            return $this->redirect('index');
+    }
+
+    public function getTaskdetail($task_id){
+        $sql = "
+        select tj.task_id 
+            ,tj.typej_id AS tj_type
+            ,ut.typej_detail AS tj_detail
+            ,tj.task_date_start AS tj_date
+            ,tj.task_personal AS personal
+            ,tj.task_owner AS tj_owner
+            from 
+            t_task_job tj
+            left join m_unit_typejob ut on tj.typej_id = ut.typej_id
+            where
+            tj.task_id = ".$task_id."
+        ";
+        $task = Yii::$app->db->createCommand($sql)->queryOne();
+
+        return $task ;
+    }
+
+    public function getAssignuser($task_id){
+        $sql = "
+        select t_task_assign.user_id ,m_user.user_name
+        from t_task_assign inner join m_user on t_task_assign.user_id = m_user.user_id
+        where task_id = ".$task_id."
+        ";
+        $user_id = Yii::$app->db->createCommand($sql)->queryAll();
+
+        return $user_id;
+    }
+
+
 }

@@ -1,3 +1,6 @@
+<?php
+use app\models\TaskJob;
+?>
 <!DOCTYPE html>
 <html>
 
@@ -193,6 +196,8 @@
           //echo "<br><br><br><br> Count Array".$count_arr2."-----";
           for($row2 = 0; $row2 < $count_arr2;$row2++ ){
            // echo " Job : ".$timeline2[$datestart][$row2]['typej_detail'];
+           
+            
             ?>
               <div class="col-sm-4">
               <div class="timeline-box">
@@ -206,7 +211,16 @@
                   <div class="box-item"><strong>สถานที่</strong>: <?= $timeline2[$datestart][$row2]['task_location'] ?></div>
                   <div class="box-item"><strong>วันเวลา</strong>: <?= $timeline2[$datestart][$row2]['task_date_start'] . ' ' . $timeline2[$datestart][$row2]['time_start'] ?></div>
                 </div>
-                <div class="box-footer">- ผู้ได้รับมอบหมาย</div>
+                <?php
+                  $assign_user = TaskJob::getAssignuser2($timeline2[$datestart][$row2]['task_id']);
+                  $username = "";
+                  $i = 1;
+                  foreach ($assign_user as $assign_rs) {
+                      $username = $username."<br> (".$i.")".$assign_rs['user_name'];
+                      $i++;
+                  }
+                ?>
+                <div class="box-footer">- ผู้ได้รับมอบหมาย: <?=$username?></div>
               </div>
             </div>
 

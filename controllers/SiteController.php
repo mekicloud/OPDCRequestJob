@@ -19,8 +19,8 @@ use app\models\TaskJob;
 use app\models\TaskAdmin;
 use yii\db\Query;
 use yii\helpers\Url;
-
-Yii::setAlias('@smart', 'https://smart.opdc.go.th/opdc_dev/');
+use yii\web\JsExpression;
+Yii::setAlias('@smart', 'https://smart.opdc.go.th/opdc_dev/test/');
 class SiteController extends Controller
 {
     /**
@@ -173,7 +173,7 @@ class SiteController extends Controller
 
         $client_id = '50psyjPcWvod79kLAO98z0';
         $api_url = 'https://notify-bot.line.me/oauth/authorize?';
-        $callback_url = 'http://172.16.23.41/yii2basicline/web/site/callback';
+        $callback_url = 'https://smart.opdc.go.th/opdc_job/web/site/callback';
 
         $query = [
             'response_type' => 'code',
@@ -310,7 +310,7 @@ class SiteController extends Controller
         $client_secret = 'GkB0lLEnRPuOOqKsbafz7ytMe5PyVIhMtyVEJugu2ER';
 
         $api_url = 'https://notify-bot.line.me/oauth/token';
-        $callback_url = 'http://172.16.23.41/yii2basicline/web/site/callback';
+        $callback_url = 'https://smart.opdc.go.th/opdc_job/web/site/callback';
 
         parse_str($_SERVER['QUERY_STRING'], $queries);
         
@@ -440,46 +440,51 @@ class SiteController extends Controller
 		
 	public function actionJsoncalendar($start=NULL,$end=NULL,$_=NULL){
 
-            \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-            $jobTime = "SELECT
-            tj.task_id
-            ,utj.typej_detail
-            ,tj.task_date_start
-            ,SUBSTRING(CONVERT(VARCHAR, tj.task_time_start),1,8) AS time_start
-            ,tj.task_date_end
-            ,SUBSTRING(CONVERT(VARCHAR, tj.task_time_end),1,8) AS time_end
-            ,CASE WHEN utj.unit_id = 1 THEN 'MediumSlateBlue' 
-				WHEN utj.unit_id = 2 THEN 'Salmon'
-				ELSE '' END tj_color
-            FROM
-            t_task_job tj
-            LEFT JOIN t_task_approved ta ON tj.task_id = ta.task_id
-            LEFT JOIN m_unit_typejob utj ON tj.typej_id = utj.typej_id
-            --WHERE ta.approved3 IS NOT NULL
-            ";
+        $jobTime = "SELECT
+        tj.task_id
+        ,utj.typej_detail
+        ,tj.task_date_start
+        ,SUBSTRING(CONVERT(VARCHAR, tj.task_time_start),1,8) AS time_start
+        ,tj.task_date_end
+        ,SUBSTRING(CONVERT(VARCHAR, tj.task_time_end),1,8) AS time_end
+        ,CASE WHEN utj.unit_id = 43 THEN 'MediumSlateBlue' 
+WHEN utj.unit_id = 41 THEN 'Salmon'
+ELSE '' END tj_color
+        ,m_user.user_name
+        FROM
+        t_task_job tj
+        LEFT JOIN t_task_approved ta ON tj.task_id = ta.task_id
+        LEFT JOIN m_unit_typejob utj ON tj.typej_id = utj.typej_id
+        LEFT JOIN m_user ON tj.task_owner = m_user.user_id
+        --WHERE ta.approved3 IS NOT NULL
+        ";
 
-            $times = Yii::$app->db->createCommand($jobTime)->queryAll();
+        $times = Yii::$app->db->createCommand($jobTime)->queryAll();
 
-            //$times = TaskJob::find();
-            //var_dump($times->task_id);
-            $events = array();
-            date_default_timezone_set("Asia/Bangkok");
+        //$times = TaskJob::find();
+        //var_dump($times->task_id);
+        $events = array();
+        date_default_timezone_set("Asia/Bangkok");
 
-            foreach ($times AS $time){      
-              //Config Calendar
-                $Event = new \yii2fullcalendar\models\Event();
-                $Event->id = $time['task_id'];
-                $Event->title = $time['typej_detail'];
-                $Event->start = date('Y-m-d\TH:i:s\Z',strtotime(substr($time['task_date_start'],0).' '.substr($time['time_start'],0,5)));
-                $Event->end = date('Y-m-d\TH:i:s\Z',strtotime(substr($time['task_date_end'],0).' '.substr($time['time_end'],0)));
-                $Event->color = $time['tj_color']; //label color
-                $Event->url = 'http://google.com/';
-                $events[] = $Event;
-            }
-        
-            return $events;
-          }
+        foreach ($times AS $time){      
+          //Config Calendar
+            $Event = new \yii2fullcalendar\models\Event();
+            $Event->id = $time['task_id'];
+            $Event->title = $time['typej_detail'];
+            $Event->start = date('Y-m-d\TH:i:s\Z',strtotime(substr($time['task_date_start'],0).' '.substr($time['time_start'],0,5)));
+            $Event->end = date('Y-m-d\TH:i:s\Z',strtotime(substr($time['task_date_end'],0).' '.substr($time['time_end'],0)));
+            $Event->color = $time['tj_color']; //label color
+            $Event->nonstandard = $time['user_name'];
+            $Event->textColor = "วันที่ ".$time['task_date_start']." เวลา ".substr($time['time_start'],0,5)." น. ถึงวันที่ ".$time['task_date_end']." เวลา ".substr($time['time_end'],0)." น.";
+           // $Event->url = 'http://google.com/';
+           
+            $events[] = $Event;
+        }
+    
+        return $events;
+      }
 
     public function actionSignout()
     {
