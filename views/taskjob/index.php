@@ -16,7 +16,11 @@ use yii\widgets\Pjax;
 
 $this->title = 'ใบคำร้อง';
 $this->params['breadcrumbs'][] = $this->title;
+$js=<<< JS
+     $(".alert").animate({opacity: 1.0}, 3000).fadeOut("slow");
+JS;
 
+$this->registerJs($js, yii\web\View::POS_READY);
 ?>
 <style>
 input[type=checkbox] {
@@ -112,13 +116,15 @@ input[type=submit] {
 
         function confirmDisable($task_id) {
             swal.fire({
-                title: "Are you sure DELETEid ",
-                text: "You will not be able to recover this imaginary file!",
+                title: "ต้องการยกเลิกใบคำร้องที่ " + $task_id + "<br>ใช่หรือไม่",
+                text: "",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#DD6B55",
-                confirmButtonText: "Yes, delete it!",
+                confirmButtonText: "ยืนยัน",
+                cancelButtonText: "ปิด",
                 closeOnConfirm: false,
+                showCloseButton: true,
             }).then((result) => {
                 if (result.value) {
                     $.ajax({
@@ -130,6 +136,42 @@ input[type=submit] {
                     dataType: "html",
                      })
                 }        
+            })
+        }
+
+        function confirmApproved($task_id) {
+            swal.fire({
+                title: "ต้องการอนุมัติใบคำร้องที่ " + $task_id + "<br>ใช่หรือไม่",
+                text: "",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#8FBC8F",
+                confirmButtonText: "อนุมัติ",
+                cancelButtonColor: "#DD6B55",
+                cancelButtonText: "ไม่อนุมัติ",
+                closeOnConfirm: false,
+                showCloseButton: true,
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                    url: "../taskjob/approved/" + $task_id,
+                    type: "GET",
+                     data: {
+                         id: 111
+                     },
+                    dataType: "html",
+                     });
+                } 
+                else if(result.dismiss === Swal.DismissReason.cancel){
+                    $.ajax({
+                    url: "../taskjob/notapproved/" + $task_id,
+                    type: "GET",
+                     data: {
+                         id: 111
+                     },
+                    dataType: "html",
+                     })
+                }       
             })
         }
 
@@ -160,18 +202,31 @@ input[type=submit] {
             }else{
                 chkAss.splice(index,1);
             }
-             alert(JSON.stringify(chkAss));
+            //  alert(JSON.stringify(chkAss));
         }
+
+        function saveNotApproved(){
+           
+                    $.ajax({
+                    url: "../taskjob/notapproved/" + task_id,
+                    type: "GET",
+
+                    dataType: "html",
+                     })
+        }      
+        
 
         function saveProcAssign(){
             // var jsonString = JSON.stringify(chkAss);
             swal.fire({
                 title: "55555",
-                text: "You will not be able to recover this imaginary file!",
+                text: "ยืนยันการมอบหมายงานใช่หรือไม่",
                 icon: "warning",
                 showCancelButton: true,
-                confirmButtonColor: "#DD6B55",
-                confirmButtonText: "Yes, delete it!",
+                confirmButtonColor: "#27408B",
+                confirmButtonText: "ยืนยัน",
+                showCloseButton: true,
+                cancelButtonText: "ปิด",
                 closeOnConfirm: false,
             }).then((result) => {
                 if (result.value) {
@@ -185,7 +240,7 @@ input[type=submit] {
                     cache: false,
                    // dataType: "html",
                      })
-                }        
+                }
             })
            
         }
@@ -276,7 +331,7 @@ input[type=submit] {
         <div id="txtAss" ></div>
     </div>
     <div class="modal-footer">
-        <button type="button" data-dismiss="modal" class="btn btn-danger">ไม่อนุมัติ</button>
+        <button type="button" data-dismiss="modal" class="btn btn-danger" onclick="saveNotApproved()">ไม่อนุมัติ</button>
         <button type="button" data-dismiss="modal" class="btn btn-primary" onclick="saveProcAssign()">ยืนยัน</button>
         <button type="button" data-dismiss="modal" class="btn">ปิด</button>
     </div>
@@ -305,7 +360,10 @@ input[type=submit] {
             <?= DataTables::widget([
                 'dataProvider' => $dataProvider,
                 'filterModel' => $searchModel,
-                
+                'clientOptions' => [
+                    "responsive" => true,
+                    "order" => [[0,'desc']]
+                ],
                 'columns' => [
                    // ['class' => 'yii\grid\SerialColumn'],
                     'task_id',
@@ -315,31 +373,36 @@ input[type=submit] {
                         'value' => 'typej.typej_detail',
                     ],
                     'task_date_start',
-                    'task_time_start',
+                    'task_time_start:time',
                     'task_location',
                     [
                         'class' => 'yii\grid\ActionColumn',
                         'header' => 'Action',
+                        
                         'buttonOptions' => ['class' => 'btn btn-default'],
                         'template' => '<div class="btn-group btn-group-sm text-center" role="group">{approved} {assign} {view} {update} {disable} </div>',
                         'options' => ['style' => 'width:200px;'],          
                         'buttons' => [   
                            
-                                'approved' => function ($url = 'approved', $model, $key) {
+                                'approved' => function ( $model, $key) {
                                      if (TaskJob::get_leader_type() == 1){
-                                        return Html::a('<i class="fa fa-check" data-toggle="tooltip" title="อนุมัติ '.TaskJob::get_leader_type().'" onclick="notify(' . $key . ');"></i>', $url, ['class' => 'btn btn-success']);
+                                        $id = $key['task_id'];
+                                        return Html::button('<i class="fa fa-check" data-toggle="tooltip" title="อนุมัติ '
+                                        .TaskJob::get_leader_type().'" ></i>',  ['class' => 'btn btn-success',
+                                         'onclick' => "confirmApproved( $id )"]);
                                       }  
                                 return "";
                             },
                                         
-                            
+                        
                             'assign' => function ( $model, $key) {
                                 if (TaskJob::get_leader_type() === 2){
                                     $id = $key['task_id'];
                                     $leader_type =  TaskJob::get_leader_type();
                                     $num_user = $key['task_personal'];
                                     return Html::button('<i class="fa fa-user-check" data-toggle="tooltip" title="จ่ายงาน"></i>', 
-                                     ['class' => 'btn btn-primary', 'onclick' => "procAssign( $id , $leader_type , $num_user  )"]);
+                                     ['class' => 'btn btn-primary',
+                                      'onclick' => "procAssign( $id , $leader_type , $num_user  )"]);
                                 }
                             return "";
                             },

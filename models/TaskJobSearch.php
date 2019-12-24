@@ -66,10 +66,11 @@ class TaskJobSearch extends TaskJob
             ,task_location
             ,task_personal
             ,1 as leader_type
-        FROM OPDC_EOF.dbo.t_task_job tj inner join m_user mu on tj.task_owner = mu.user_id
+        FROM t_task_job tj inner join m_user mu on tj.task_owner = mu.user_id
             inner join t_task_approved ta on tj.task_id  = ta.task_id 
-        where approved1 != '' and approved2 IS NUll 
-        and task_status = 1
+        where approved1 != '' and approved2 IS NUll
+        and (task_status > 0 and task_status != 13)
+    
 	union select tj.task_id
             ,task_detail
             ,typej_id
@@ -86,9 +87,10 @@ class TaskJobSearch extends TaskJob
             from t_task_job tj left join m_user on tj.task_owner = m_user.user_id  
                 left join m_org_inner on m_user.cont_to_id = m_org_inner.org_id
                 left join t_leader on m_user.user_id = t_leader.user_id 
-                
-            where parent_id = 37 or (t_leader.org_id = 37 and leader_type = 4)
-            and task_status = 1
+                inner join t_task_approved ta on tj.task_id  = ta.task_id
+            where ( parent_id = 37 or (t_leader.org_id = 37 and leader_type = 4))
+                and (task_status > 0 and task_status != 13) and approved1 != '' and approved2 IS NUll
+
             ";
         } else if ($urank['org_id'] == 52 ) { //นางพรทิพย์ แก้วมูลคำ Capt 2 Group
             $sql_data = "
@@ -109,7 +111,8 @@ class TaskJobSearch extends TaskJob
             left join m_org_inner on m_user.cont_to_id = m_org_inner.org_id
             left join t_leader on t_leader.user_id = $uid
         where cont_to_id = 51 or cont_to_id = 52 or cont_to_id2 = 52
-        and task_status = 1
+        and (task_status > 0 and task_status != 13)
+        order by tj.task_id desc
             ";
         } elseif($urank['org_id'] == 43 ){ // IT
             $sql_data = "select *,
@@ -119,7 +122,8 @@ class TaskJobSearch extends TaskJob
             left join t_task_approved on t_task_job.task_id = t_task_approved.task_id
             left join t_leader on t_leader.user_id = $uid
              where unit_id = 43 and approved2 is not null
-             and task_status = 1";    ;          
+             and (task_status > 0 and task_status != 13)  and approved3 is null
+             order by t_task_job.task_id desc";    ;          
         } elseif($urank['org_id'] == 41){ // ประชาสัมพันธ์
             $sql_data = "select *,
             2 as leader_type
@@ -128,7 +132,8 @@ class TaskJobSearch extends TaskJob
             left join t_task_approved on t_task_job.task_id = t_task_approved.task_id
             left join t_leader on t_leader.user_id = $uid
              where unit_id = 41 and approved2 is not null
-             and task_status = 1";
+             and (task_status > 0 and task_status != 13)  and approved3 is null
+             order by t_task_job.task_id desc";
         } else { // Other User & Capt
             $sql_data = "
     select distinct task_id,task_detail
@@ -149,7 +154,8 @@ class TaskJobSearch extends TaskJob
             left join t_leader on t_leader.user_id = $uid
         where m_org_inner.org_id = (select cont_to_id from m_user where user_id = $uid)
             or parent_id = (select cont_to_id from m_user where user_id = $uid)  
-            and task_status = 1
+            and (task_status > 0 and task_status != 13)
+            order by t_task_job.task_id desc
             ";
         }
 

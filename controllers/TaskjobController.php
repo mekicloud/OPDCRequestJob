@@ -242,7 +242,7 @@ class TaskjobController extends Controller
             $this->actionNotify($token_boss,$messages_boss);
             
             $session->close();  // close a session
-
+            Yii::$app->session->setFlash('success', 'สร้างใบคำร้องเรียบร้อย');
             return $this->redirect(['index']);
         }
 
@@ -367,9 +367,10 @@ class TaskjobController extends Controller
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->task_id]);
+            Yii::$app->session->setFlash('success', 'แก้ไขใบคำร้องที่ '. $model->task_id .' เรียบร้อย');
+            return $this->redirect(['index']);
         }
-
+        
         return $this->renderAjax('update', [
             'model' => $model,
         ]);
@@ -388,6 +389,7 @@ class TaskjobController extends Controller
         $model = $this->findModel($id);
         $model->task_status = '0';
         $model->save();
+        Yii::$app->session->setFlash('success', 'ยกเลิกใบคำร้องที่ '. $id .' เรียบร้อย');
         return $this->redirect('index');
 
     }
@@ -417,7 +419,7 @@ order by leader_type asc
 left join t_leader on m_unit_typejob.unit_id = t_leader.org_id 
 where leader_type = 6 and task_id = ".$task_id."
         ";
-        $boss = Yii::$app->db->createCommand($sql)->queryScalar();
+        $assign_id = Yii::$app->db->createCommand($sql)->queryScalar();
         return $assign_id;
     }
 
@@ -498,9 +500,19 @@ where leader_type = 6 and task_id = ".$task_id."
                                     )->execute();
                             }
                         $session->close();  // close a session
-    
+                        Yii::$app->session->setFlash('success', 'อนุมัติใบคำร้องที่ '. $id .' เรียบร้อย');
                         
                         return $this->redirect(['index', '']);
+        }
+
+        public function actionNotapproved($id)
+        {
+            Yii::$app->db->createCommand("UPDATE t_task_job SET task_status = '13'  WHERE task_id = '".$id."'")->execute();
+                                    //send message to task_owner
+                                    
+                        Yii::$app->session->setFlash('success', 'ไม่อนุมัติใบคำร้องที่ '. $id .' เรียบร้อย');
+                        
+                        return $this->redirect('index');
         }
 
     /**
@@ -679,7 +691,7 @@ where leader_type = 6 and task_id = ".$task_id."
                $i++;
             }
             $messages_user = "งาน ".$task_detail['tj_detail']." วันที่ ".$task_detail['tj_date']."หัวหน้างาน Assign เจ้าหน้าที่เรียบร้อย...";
-            $messages_groupIT = "งาน ".$task_detail['tj_detail']." วันที่ ".$task_detail['tj_date']." หัวหน้างาน Assign เจ้าหน้าคือ ".$username;
+            $messages_groupIT = "งาน ".$task_detail['tj_detail']." วันที่ ".$task_detail['tj_date']." หัวหน้างาน Assign เจ้าหน้าที่คือ ".$username;
             $task_owner = $this->getTaskOwner($task_id);
             $token_task_owner = $this->getAccessToken($task_owner);
             $token_it = "";
