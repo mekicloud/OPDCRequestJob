@@ -3,7 +3,8 @@
 namespace app\models;
 
 use Yii;
-
+use app\models\LeaderType;
+use app\models\MUser;
 /**
  * This is the model class for table "t_task_job".
  *
@@ -25,6 +26,7 @@ use Yii;
  * @property MUser[] $users
  * @property MUser $taskOwner
  * @property UnitTypejob $typej
+* @property string|null $task_status
  */
 class TaskJob extends \yii\db\ActiveRecord
 {
@@ -41,6 +43,10 @@ class TaskJob extends \yii\db\ActiveRecord
      */
     public function rules()
     {
+        $session = Yii::$app->session;
+             $session->open(); // open a session
+             
+           
         return [
             [['task_id', 'task_detail', 'task_time_start', 'task_time_end', 'task_order_time'], 'required'],
             [['task_id', 'typej_id', 'task_owner', 'task_personal'], 'integer'],
@@ -48,9 +54,13 @@ class TaskJob extends \yii\db\ActiveRecord
             [['task_detail'], 'string', 'max' => 500],
             [['task_location'], 'string', 'max' => 255],
             [['task_id'], 'unique'],
+            [['task_status'], 'string', 'max' => 2],
+            //[['leader_type'],'integer'],
             [['task_owner'], 'exist', 'skipOnError' => true, 'targetClass' => MUser::className(), 'targetAttribute' => ['task_owner' => 'user_id']],
             [['typej_id'], 'exist', 'skipOnError' => true, 'targetClass' => UnitTypejob::className(), 'targetAttribute' => ['typej_id' => 'typej_id']],
+            //[['leader_type'], 'exist', 'skipOnError' => true, 'targetClass' => LeaderType::className(), 'targetAttribute' => ['leader_type' => $session->get('UID')]],
         ];
+        $session->close();
     }
 
     public function getUserDropdown()
@@ -69,7 +79,7 @@ class TaskJob extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'task_id' => 'Task ID',
+            'task_id' => '#',
             'task_detail' => 'รายละเอียด',
             'typej_id' => 'ประเภทงาน',
             'task_date_start' => 'วันที่',
@@ -81,7 +91,7 @@ class TaskJob extends \yii\db\ActiveRecord
             'task_order_time' => 'Task Order Time',
             'task_location' => 'สถานที่',
             'task_personal' => 'Task Personal',
-            
+            'task_status' => 'Task Status',
         ];
     }
 
@@ -124,4 +134,59 @@ class TaskJob extends \yii\db\ActiveRecord
     {
         return $this->hasOne(UnitTypejob::className(), ['typej_id' => 'typej_id']);
     }
+
+    // public function getLeadertype(){
+    //     $session = Yii::$app->session;
+    //     $session->open(); // open a session
+    //     return $this->hasOne(LeaderType::className(), ['user_id' => $session->get('UID')]);
+    //     $session->close();
+    // }
+    public static function get_leader_type (){
+        $session = Yii::$app->session;
+        $session->open();
+        $model = LeaderType::find()->where(["user_id" => $session->get('UID')])->one();
+        $session->close();
+        
+        if(!empty($model)){
+            if($model->leader_type < 5) {
+                return 1;
+            }elseif (($model->leader_type == 6 and $model->org_id == 43) 
+            or ($model->leader_type == 6 and $model->org_id == 41)) {
+                return 2;
+            }
+            else{
+                return 0;
+            }
+            
+        }else{
+            return 0;
+        }
+    }
+
+    public function get_user_assign(){
+        $session = Yii::$app->session;
+        $session->open();
+        $model = MUser::find()->where(["user_id" => $session->get('UID')])->one();
+        $session->close();
+        $sql_data = "       
+                select m_user.user_id , (user_title_name + user_name) as user_name from m_user
+                where cont_to_id = $model->cont_to_id
+                and user_name_status = 'ปกติ'
+                and RFID_code is not null
+                and user_id not in (select user_id from t_leader)";
+        $data_user = Yii::$app->db->createCommand($sql_data)->queryAll();
+        return $data_user;     
+    }
+
+    public function getAssignuser2($task_id){
+        $sql = "
+        select t_task_assign.user_id ,m_user.user_name
+        from t_task_assign inner join m_user on t_task_assign.user_id = m_user.user_id
+        where task_id = ".$task_id."
+        ";
+        $user_id = Yii::$app->db->createCommand($sql)->queryAll();
+
+        return $user_id;
+    }
+
 }

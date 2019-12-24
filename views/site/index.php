@@ -10,7 +10,7 @@ $this->title = 'ใบคำร้อง';
 
 
 ?>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
 <div class="panel panel-info">
   <div class="panel-heading">
     <h4 class="panel-title">
@@ -40,20 +40,50 @@ $this->title = 'ใบคำร้อง';
   <span class="label label-danger">สีงานประชาสัมพันธ์</span>
 </div>
 -->
+<?php 
+  $test = $userdata['user_name'];
+  //  var_dump($userdata);
+?>
+
+<script type="text/javascript">
+var event = calendar.getEventById('a')
+</script>
 <div class="panel panel-danger" style="margin-top: -10px">
   <div class="panel-heading">
     <h3 class="panel-title"><i class="fas fa-tasks"></i> ตารางงาน</h3>
   </div>
   <div class="panel-body">
-    <?= yii2fullcalendar\yii2fullcalendar::widget([
+  <?= yii2fullcalendar\yii2fullcalendar::widget([
       'options' => [
         'lang' => 'th',
+        'id' => 'calendar',
         //'eventColor'=> '#000000'
         //... more options to be defined here!
       ],
       
       //'events'=> $events,
       'events' => Url::to(['/site/jsoncalendar']),
+      'eventClick' => "function(calEvent, jsEvent, view) {
+        $(this).css('border-color', 'red');
+        $.get('../taskjob/view/'+calEvent.id, function(data){
+            $('.modal').modal('show')
+            .find('#modelContent')
+            .html(data);
+          
+           
+            $('#modalTitle').html('');
+            $('#modalBody').html('');
+            $('#modalTitle').append('เลขที่ใบคำร้อง : ' + calEvent.id + '<br>' );
+            $('#modalBody').append('รายละเอียด : ' + calEvent.title + '<br>'  );
+            $('#modalBody').append('ตั้งแต่ : ' + calEvent.textColor  + '<br>' );
+            $('#modalBody').append('ผู้ขอ : ' + calEvent.nonstandard );
+        });
+
+        $('#calendar').fullCalendar( function (calEvent) {
+            return true;
+        });
+
+    }",
       
     ]);
     ?>

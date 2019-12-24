@@ -1,47 +1,132 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\DetailView;
+use yii\widgets\ActiveForm;
+use app\models\UnitTypejob;
+use yii\helpers\ArrayHelper;
+use kartik\date\DatePicker;
+use kartik\field\FieldRange;
+use kartik\time\TimePicker;
+use dominus77\sweetalert2\Alert;
+use yii\web\JsExpression;
+
 
 /* @var $this yii\web\View */
 /* @var $model app\models\TaskJob */
-
-$this->title = $model->task_id;
-$this->params['breadcrumbs'][] = ['label' => 'Task Jobs', 'url' => ['index']];
-$this->params['breadcrumbs'][] = $this->title;
-\yii\web\YiiAsset::register($this);
+/* @var $form yii\widgets\ActiveForm */
 ?>
-<div class="task-job-view">
 
-    <h1><?= Html::encode($this->title) ?></h1>
+<script>
 
-    <p>
-        <?= Html::a('Update', ['update', 'id' => $model->task_id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a('Delete', ['delete', 'id' => $model->task_id], [
-            'class' => 'btn btn-danger',
-            'data' => [
-                'confirm' => 'Are you sure you want to delete this item?',
-                'method' => 'post',
-            ],
-        ]) ?>
-    </p>
+</script>
 
-    <?= DetailView::widget([
-        'model' => $model,
-        'attributes' => [
-            'task_id',
-            'task_detail',
+
+<div class="task-job-form">
+
+    <?php $form = ActiveForm::begin(); ?>
+
+    <div class="row col-lg-12 col-md-12 col-xs-12" style="padding-left:30px;padding-right:30px">
+        <?= Html::activeDropDownList(
+            $model,
             'typej_id',
-            'task_date_start',
-            'task_time_start',
-            'task_date_end',
-            'task_time_end',
-            'task_owner',
-            'task_order_date',
-            'task_order_time',
-            'task_location',
-            'task_personal',
-        ],
-    ]) ?>
+            ArrayHelper::map(UnitTypejob::find()->all(), 'typej_id', 'typej_detail'),
+            [
+                'class' => 'form-control disabled',
+                'disabled' => 'disabled'
+            ]
+        ) ?>
+    </div>
+
+    <div class="row col-lg-12 col-md-12 col-xs-12" style="padding-left:30px;padding-right:30px">
+        <?= $form->field($model, 'task_detail')->textarea([
+            'maxlength' => true,
+            'placeholder' => 'รายละเอียด',
+            'disabled' => 'disabled'
+        ])->label('') ?>
+    </div>
+
+
+    <div class="row col-lg-12 col-md-12 col-xs-12">
+        <div class="col-lg-12 col-md-12 col-xs-12">
+            <?php echo DatePicker::widget([
+                'model' => $model,
+                'attribute' => 'task_date_start',
+                'name' => 'from_date',
+                'type' => DatePicker::TYPE_RANGE,
+                'value' => date('yyyy-mm-dd', strtotime('+543 years')),
+                'options' => ['placeholder' => 'ตั้งแต่วันที่'],
+
+                'attribute2' => 'task_date_end',
+                'name2' => 'to_date',
+                //'value2' =>  date('Y-m-d', strtotime('+543 years')),
+                'options2' => ['placeholder' => 'ถึงวันที่'],
+                'language' => 'th',
+
+                'pluginOptions' => [
+                    'autoclose' => true,
+                    'format' => 'yyyy-mm-dd',
+                    'todayHighlight' => true,
+                    'startDate' =>  date('Y-m-d'),
+
+                ]
+            ]);
+            ?>
+        </div>
+    </div>
+
+    <div class="row col-lg-12 col-md-12 col-xs-12">
+        <div class="col-lg-6 col-md-6 col-xs-6" style="margin-top: 15px">
+            <?php
+
+            echo TimePicker::widget([
+                'name' => 't1',
+                'model' => $model,
+                'attribute' => 'task_time_start',
+                'pluginOptions' => [
+                    'showSeconds' => false,
+                    'showMeridian' => false,
+                    'minuteStep' => 5,
+                    'secondStep' => 5,
+
+                ]
+            ]);
+            ?>
+
+        </div>
+        <div class="col-lg-6 col-md-6 col-xs-6" style="margin-top: 15px;">
+            <?php
+            echo TimePicker::widget([
+                'name' => 't1',
+                'model' => $model,
+                'attribute' => 'task_time_end',
+                'pluginOptions' => [
+                    'showSeconds' => false,
+                    'showMeridian' => false,
+                    'minuteStep' => 5,
+                    'secondStep' => 5,
+                    
+                ]
+            ]);
+            ?>
+        </div>
+    </div>
+    <div class="row col-lg-12 col-md-12 col-xs-12">
+        <div class="col-lg-8 col-md-12 col-xs-12">
+            <?= $form->field($model, 'task_location')->textInput([
+                'maxlength' => true,
+                'placeholder' => 'สถานที่',
+                'disabled' => 'disabled'
+            ])->label('') ?>
+        </div>
+        <div class="col-lg-4 col-md-12 col-xs-12">
+            <?= $form->field($model, 'task_personal')->textInput([
+                'type' => 'number',
+                'placeholder' => 'จำนวนคน',
+                'disabled' => 'disabled'
+            ])->label('') ?>
+        </div>
+    </div>
+
+    <?php ActiveForm::end(); ?>
 
 </div>

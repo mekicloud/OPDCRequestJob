@@ -179,7 +179,7 @@ class TaskjobController extends Controller
 
             }
         }
-        
+       
         return $this->render('timeline', [
             'times' => $times,
              'curMount' => $getCurMount,
@@ -238,9 +238,8 @@ class TaskjobController extends Controller
             $token_boss = $this->getAccessToken($boss_id);
             $messages_boss = "มีใบคำร้องเข้ามาใหม่ที่รอการอนุมัติจาก ผอ.กอง";
             $this->actionNotify($token_boss,$messages_boss);
-            
             $session->close();  // close a session
-
+            Yii::$app->session->setFlash('success', 'สร้างใบคำร้องเรียบร้อย');
             return $this->redirect(['index']);
         }
 
@@ -365,7 +364,8 @@ class TaskjobController extends Controller
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->task_id]);
+            Yii::$app->session->setFlash('success', 'แก้ไขใบคำร้องที่ '. $model->task_id .' เรียบร้อย');
+            return $this->redirect(['index']);
         }
 
         return $this->renderAjax('update', [
@@ -386,6 +386,7 @@ class TaskjobController extends Controller
         $model = $this->findModel($id);
         $model->task_status = '0';
         $model->save();
+        Yii::$app->session->setFlash('success', 'ยกเลิกใบคำร้องที่ '. $id .' เรียบร้อย');
         return $this->redirect('index');
 
     }
@@ -439,8 +440,10 @@ where leader_type = 6 and task_id = ".$task_id."
                                         ],
                                         'task_id = ' . $id
                                     )->execute();
+
                                     //update task_status = 3 เมื่อ ผอ สลธ approve
                                     Yii::$app->db->createCommand("UPDATE t_task_job SET task_status = 3 WHERE task_id = ".$id." ")->execute();
+
                                     //send message to task_owner
                                     $task_owner_id = $this->getTaskOwner($id);
                                     $token_o = $this->getAccessToken($task_owner_id);
@@ -462,6 +465,7 @@ where leader_type = 6 and task_id = ".$task_id."
                                         ],
                                         'task_id = ' . $id
                                     )->execute();
+
                                     //update task_status = 2 เมื่อ ผอ กอง approve
                                     Yii::$app->db->createCommand("UPDATE t_task_job SET task_status = 2 WHERE task_id = ".$id." ")->execute();
                                     //send message to task_owner
@@ -499,10 +503,20 @@ where leader_type = 6 and task_id = ".$task_id."
                                     )->execute();
                             }
                         $session->close();  // close a session
-    
-                        
+                        Yii::$app->session->setFlash('success', 'อนุมัติใบคำร้องที่ '. $id .' เรียบร้อย');           
                         return $this->redirect(['index', '']);
         }
+
+        public function actionNotapproved($id)
+        {
+            Yii::$app->db->createCommand("UPDATE t_task_job SET task_status = '13'  WHERE task_id = '".$id."'")->execute();
+                                    //send message to task_owner
+                                    
+                        Yii::$app->session->setFlash('success', 'ไม่อนุมัติใบคำร้องที่ '. $id .' เรียบร้อย');
+                        
+                        return $this->redirect('index');
+        }
+
 
     /**
      * Finds the TaskJob model based on its primary key value.
@@ -531,24 +545,6 @@ where leader_type = 6 and task_id = ".$task_id."
         $model = new Notify();
         $json = null;
 
-        //$session = Yii::$app->session;
-        //$session->open(); // open a session
-        //$uid = $session->get('UID');
-        //$rankUser = Yii::$app->db->createCommand('SELECT rank_priority FROM m_rank_user WHERE user_id=:id')
-        //    ->bindValue(':id', $session->get('UID'))
-        //    ->queryOne();
-        /*
-        if ($rankUser['rank_priority'] == 5) { //ผอ กอง
-            $messages = "มีรายการใบคำร้องที่รอการเห็นชอบจากท่าน ผอ.กอง...";
-        } else if ($rankUser['rank_priority'] == 4) { //ผอ สลธ
-            $messages = "มีรายการใบคำร้องที่รอการอนุมัติจากท่าน ผอ.สลธ...";
-        } else if ($rankUser['rank_priority'] == 6) {
-            $messages = "มีรายการใบคำร้องที่รอการกำหนดผู้ปฏิบัติงานจากหัวหน้ากลุ่มงาน...";
-        } else {
-            $messages = "ใบคำร้องได้รับการบันทึกเรียบร้อย...";
-        }
-        */
-        // if($model->load(Yii::$app->request->post())){
         $headers = [
             'Authorization: Bearer ' . $token
         ];
@@ -702,6 +698,7 @@ where leader_type = 6 and task_id = ".$task_id."
             $this->actionNotify($token_task_owner, $messages_user);
             //Line Notify Assign to GroupIT
             $this->actionNotify($token_group, $messages_groupIT);
+
             return $this->redirect('index');
     }
 
