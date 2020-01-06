@@ -96,7 +96,7 @@ AppAsset::register($this);
                     
                     ['label' => 'ปฏิทินงาน', 'url' => ['/site/index']],
                     ['label' => 'จัดการใบคำร้อง', 'url' => ['/taskjob/index']],
-                    //['label' => 'รายการอนุมัติ', 'url' => ['/taskapproved/index']],
+                    ['label' => 'ใบคำร้องที่ได้อนุมัติ', 'url' => ['/taskapproved/approvelist']],
                     ['label' => 'ผู้ใช้งาน '.$session->get('username'),
                         'url' => ['#'],
                         'template' => '<a href="{url}" >{label}<i class="fa fa-angle-left pull-right"></i></a>',

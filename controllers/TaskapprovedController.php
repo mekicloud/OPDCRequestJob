@@ -124,4 +124,8 @@ class TaskapprovedController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
+
+    public function actionApprovelist(){
+        return $this->render('approvelist');
+    }
 }
