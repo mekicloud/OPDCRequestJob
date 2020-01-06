@@ -272,7 +272,7 @@ class TaskjobController extends Controller
             'timeline2' => $timeline,
             'd_timeline' => $date_tl,
             'year_list' => $year_list,
-            'month_list' => $month_list
+            'month_list' => $month_list,
         ]);
 
     }
