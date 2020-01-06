@@ -12,14 +12,15 @@ $this->params['breadcrumbs'][] = 'Update';
 ?>
 <div class="task-job-update">
 
-    <div class="panel panel-info">
-        <div class="panel-heading">
-            <?= Html::a('<span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span> ย้อนกลับ', ['index'], ['class' => 'btn btn-warning btn-sm']) ?>
+    <div class="row">
+        <div>
+            <?php // Html::a('<span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span> ย้อนกลับ', ['index'], ['class' => 'btn btn-warning btn-sm']) ?>
         </div>
-        <div class="panel-body">
+        <div >
             <?= $this->render('_form', [
                 'model' => $model,
             ]) ?>
         </div>
 
     </div>
+</div>

@@ -101,7 +101,7 @@ AppAsset::register($this);
                         'url' => ['#'],
                         'template' => '<a href="{url}" >{label}<i class="fa fa-angle-left pull-right"></i></a>',
                         'items' => [
-                            ['label' => 'ข้อมูลบุคคล', 'url' => ['/site/profile']],
+                            // ['label' => 'ข้อมูลบุคคล', 'url' => ['/site/profile']],
                             ['label' => 'กลับหน้าหลัก', 'url' => ['/site/signout']],
                         ],
                     ],

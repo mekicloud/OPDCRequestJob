@@ -106,6 +106,8 @@ input[type=submit] {
   left: 30%;
 
 }
+
+
 </style>
 
 
@@ -219,8 +221,8 @@ input[type=submit] {
         function saveProcAssign(){
             // var jsonString = JSON.stringify(chkAss);
             swal.fire({
-                title: "55555",
-                text: "ยืนยันการมอบหมายงานใช่หรือไม่",
+                title: "ยืนยันการมอบหมายงานใช่หรือไม่",
+                text: "",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#27408B",
@@ -256,7 +258,7 @@ input[type=submit] {
                         {
                             $("#activity-modal").find(".modal-body").html(data);
                             $(".modal-body").html(data);
-                            $(".modal-title").html("เพิ่มข้อมูลสมาชิก");
+                            $(".modal-title").html("สร้างใบคำร้อง");
                             $("#activity-modal").modal("show");
                         }
                     );
@@ -272,7 +274,7 @@ input[type=submit] {
                         {
                             $("#activity-modal").find(".modal-body").html(data);
                             $(".modal-body").html(data);
-                            $(".modal-title").html("เปิดดูข้อมูล");
+                            $(".modal-title").html("รายละเอียดใบคำร้อง");
                             $("#activity-modal").modal("show");
                         }
                     );
@@ -288,7 +290,7 @@ input[type=submit] {
                         {
                             $("#activity-modal").find(".modal-body").html(data);
                             $(".modal-body").html(data);
-                            $(".modal-title").html("แก้ไขข้อมูลสมาชิก");
+                            $(".modal-title").html("แก้ไขใบคำร้อง");
                             $("#activity-modal").modal("show");
                         }
                     );
@@ -364,7 +366,7 @@ input[type=submit] {
                     "responsive" => true,
                     "order" => [[0,'desc']]
                 ],
-                'columns' => [
+                'columns' => [ 
                    // ['class' => 'yii\grid\SerialColumn'],
                     'task_id',
                     'task_detail',
@@ -451,5 +453,5 @@ input[type=submit] {
             <?php Pjax::end() ?>
         </div>
     </div>
-
+ๅ   ๆ
 </div>

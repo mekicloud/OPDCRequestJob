@@ -169,12 +169,28 @@ use app\models\TaskJob;
 
 <body>
     <?php if(empty($timeline2)){}else{ ?>
+    <div class="row">
+      <div class=" pull-right">
+        <div >
+        <button class="disabled btn btn-xs btn-primary btn-block">กลุ่มงานเทคโนโลยีสารสนเทศ</button>
+        </div>
+        <div >
+        <button class="disabled btn btn-xs btn-danger" style="">กลุ่มงานเลขานุการ ก.พ.ร. และการประชาสัมพันธ์</button>
+        </div>
+              
+             
+        </div>
+        </div>
+        <div class="row">
   <div class="container">
+
+  
     <div class="timeline">
       <div class="timeline-month">
         <?=$curMount?>, <?=$curYear?>
         <span><?=count($times);?> รายการ</span>
       </div>
+     
       <!-- End Time Line-->
       <?php
 
@@ -203,7 +219,7 @@ use app\models\TaskJob;
               <div class="timeline-box">
                 <div class="box-title">
                   <i class="fa fa-asterisk text-success" aria-hidden="true"></i> <?= $timeline2[$datestart][$row2]['typej_detail'] ?>
-                  <a class="btn btn-xs btn-<?= $timeline2[$datestart][$row2]['tj_color'] ?> pull-right"><?= $timeline2[$datestart][$row2]['tj_org'] ?></a>
+                  <a class="disabled btn btn-xs btn-<?= $timeline2[$datestart][$row2]['tj_color'] ?> pull-right"><?= $timeline2[$datestart][$row2]['tj_org'] ?></a>
                 </div>
                 <div class="box-content">
                   
@@ -220,7 +236,7 @@ use app\models\TaskJob;
                       $i++;
                   }
                 ?>
-                <div class="box-footer">- ผู้ได้รับมอบหมาย: <?=$username?></div>
+                <div class="box-footer">ผู้ได้รับมอบหมาย :<?=$username?></div>
               </div>
             </div>
 
@@ -234,6 +250,7 @@ use app\models\TaskJob;
       ?>
 
     </div>
+  </div>
   </div>
     <?php } ?>
 </body>

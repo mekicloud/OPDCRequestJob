@@ -122,8 +122,8 @@ class TaskjobController extends Controller
             ,CASE WHEN utj.unit_id = 43 THEN 'primary'
 				WHEN utj.unit_id = 41 THEN 'danger'
 				ELSE '' END tj_color
-            ,CASE WHEN utj.unit_id = 43 THEN 'กลุ่มงานเทคโนโลยีสารสนเทศ'
-				WHEN utj.unit_id = 41 THEN 'กลุ่มงานเลาขานุการ ก.พ.ร. และการประชาสัมพันธ์'
+            ,CASE WHEN utj.unit_id = 43 THEN 'IT'
+				WHEN utj.unit_id = 41 THEN 'S & PR'
 				ELSE '' END tj_org
             ,tj.task_location
             FROM
@@ -335,9 +335,12 @@ class TaskjobController extends Controller
                     'approved1_date' => date('Y-m-d'),
                     'approved1_time' => date("H:i"),
                 ])->execute();
-        } elseif (
-            $cont_to_id == 54 or $cont_to_id == 55 or $cont_to_id == 56 or $cont_to_id == 57 or $cont_to_id == 58 or $cont_to_id == 59
-            or $cont_to_id == 60 or $cont_to_id == 76 or $cont_to_id == 77 or $cont_to_id == 100 or $cont_to_id == 103
+        } elseif ( //กลุ่มงานภายใน สลธ
+            $cont_to_id == 54 or $cont_to_id == 55 or $cont_to_id == 56 
+            or $cont_to_id == 57 or $cont_to_id == 58 
+            or $cont_to_id == 59 or $cont_to_id == 60 
+            or $cont_to_id == 76 or $cont_to_id == 77 
+            or $cont_to_id == 100 or $cont_to_id == 103
             or ($cont_to_id == 45 and $leader_type == 6)
         ) {
             Yii::$app->db->createCommand()
@@ -508,8 +511,23 @@ where leader_type = 6 and task_id = ".$task_id."
         public function actionNotapproved($id)
         {
             Yii::$app->db->createCommand("UPDATE t_task_job SET task_status = '13'  WHERE task_id = '".$id."'")->execute();
-                                    //send message to task_owner
-                                    
+            $app = Yii::$app->db->createCommand("SELECT case when approved1 = 1 then 1 when approved2 = 1 then 2 when approved3 = 1 then 3 else 0 end AS app FROM t_task_approved WHERE task_id =  '".$id."'")->queryScalar();
+            
+            if($app == 1){
+                $messages_tj_owner = "ใบคำร้องของท่านลำดับที่ ".$id." ไม่ได้รับการอนุญาตจากผู้บังคับบัญชา";
+            }else if($app == 2){
+                $messages_tj_owner = "ใบคำร้องของท่านลำดับที่ ".$id." ไม่ได้รับการอนุมัติจาก ผอ.สลธ";
+            }else if($app == 3){
+                $messages_tj_owner = "ใบคำร้องของท่านลำดับที่ ".$id." ไม่ได้รับการมอบหมายงานให้เจ้าหน้าที่และใบคำร้องถูกยกเลิก";
+            }else {
+                $messages_tj_owner = "ใบคำร้องของท่านลำดับที่ ".$id." ไม่ได้รับการอนุมัติ";
+            }
+            //send message to task_owner
+                        //send message to task_owner
+                        $task_owner_id = $this->getTaskOwner($id);
+                        $token_o = $this->getAccessToken($task_owner_id);
+                        //$messages_tj_owner = "ใบคำร้องของท่านลำดับที่ ".$id." ไม่ได้รับการอนุมัติ";
+                        $this->actionNotify($token_o, $messages_tj_owner);
                         Yii::$app->session->setFlash('success', 'ไม่อนุมัติใบคำร้องที่ '. $id .' เรียบร้อย');
                         
                         return $this->redirect('index');
@@ -694,7 +712,19 @@ where leader_type = 6 and task_id = ".$task_id."
             $messages_groupIT = "งาน ".$task_detail['tj_detail']." วันที่ ".$task_detail['tj_date']." หัวหน้างาน Assign เจ้าหน้าที่คือ ".$username;
             $task_owner = $this->getTaskOwner($task_id);
             $token_task_owner = $this->getAccessToken($task_owner);
-            $token_it = "";
+    
+            $task_unit = Yii::$app->db->createCommand("
+            SELECT m_unit_typejob.unit_id FROM t_task_job 
+            LEFT JOIN m_unit_typejob ON t_task_job.typej_id = m_unit_typejob.typej_id
+            WHERE task_id = $task_id")->queryScalar();
+            if($task_unit == 43){
+                $messages_groupIT = "งาน ".$task_detail['tj_detail']." วันที่ ".$task_detail['tj_date']." หัวหน้างาน Assign เจ้าหน้าที่คือ ".$username;
+               // $token_group= $this->getAccessToken('IT');
+                $token_group = "AWZ770a8Hi50sROdOE5FRYD5BUjlg4vRFiZEDa4irhN";
+            }elseif($task_unit == 41){
+                $messages_groupIT = "งาน ".$task_detail['tj_detail']." วันที่ ".$task_detail['tj_date']." หัวหน้างาน Assign เจ้าหน้าที่คือ ".$username;
+                $token_group = $this->getAccessToken('AD');
+            }
             //Line Notify Assign to Task_Owner
             $this->actionNotify($token_task_owner, $messages_user);
             //Line Notify Assign to GroupIT
