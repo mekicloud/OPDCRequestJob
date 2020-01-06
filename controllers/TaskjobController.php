@@ -89,13 +89,65 @@ class TaskjobController extends Controller
 
         public function actionTimeline()
     {
-        $timeline[][]=[    [
-            [1, 4],
-            [2, 3],
-            [5, 1],
-        ]];
-        //$model = new TaskJob();
-        $jobTime = "SELECT
+        if(Yii::$app->request->post()){
+            $years = Yii::$app->request->post('years');
+            $months = Yii::$app->request->post('month');
+            //Yii::$app->session->setFlash('success', 'Post Complete '.$years.'-'.$months);
+            $jobTime = "SELECT
+            tj.task_id
+            ,utj.typej_detail
+            ,DATENAME(day, tj.task_date_start) AS date_num
+		    ,CASE WHEN DATENAME(weekday, tj.task_date_start) = 'Monday' THEN 'จันทร์'
+									WHEN DATENAME(weekday, tj.task_date_start) = 'Thursday' THEN 'อังคาร'
+									WHEN DATENAME(weekday, tj.task_date_start) = 'Wednesday' THEN 'พุธ'
+									WHEN DATENAME(weekday, tj.task_date_start) = 'Tuesday' THEN 'พฤหัสบดี'
+									WHEN DATENAME(weekday, tj.task_date_start) = 'Friday' THEN 'ศุกร์'
+                                    WHEN DATENAME(weekday, tj.task_date_start) = 'Saterday' THEN 'เสาร์'
+                                    WHEN DATENAME(weekday, tj.task_date_start) = 'Sunday' THEN 'อาทิตย์'
+						ELSE '' END AS date_name
+                        ,CASE WHEN DATENAME(weekday, tj.task_date_start) = 'Monday' THEN 2
+									WHEN DATENAME(weekday, tj.task_date_start) = 'Thursday' THEN 3
+									WHEN DATENAME(weekday, tj.task_date_start) = 'Wednesday' THEN 4
+									WHEN DATENAME(weekday, tj.task_date_start) = 'Tuesday' THEN 5
+									WHEN DATENAME(weekday, tj.task_date_start) = 'Friday' THEN 6
+                                    WHEN DATENAME(weekday, tj.task_date_start) = 'Saterday' THEN 7
+                                    WHEN DATENAME(weekday, tj.task_date_start) = 'Sunday' THEN 1
+						ELSE '' END AS date_no
+            ,tj.task_date_start
+            ,SUBSTRING(CONVERT(VARCHAR, tj.task_time_start),1,8) AS time_start
+            ,tj.task_date_end
+            ,SUBSTRING(CONVERT(VARCHAR, tj.task_time_end),1,8) AS time_end
+            ,CASE WHEN utj.unit_id = 43 THEN 'primary'
+				WHEN utj.unit_id = 41 THEN 'danger'
+				ELSE '' END tj_color
+            ,CASE WHEN utj.unit_id = 43 THEN 'กลุ่มงานเทคโนโลยีสารสนเทศ'
+				WHEN utj.unit_id = 41 THEN 'กลุ่มงานเลขานุการ ก.พ.ร. และการประชาสัมพันธ์'
+				ELSE '' END tj_org
+            ,tj.task_location
+            FROM
+            t_task_job tj
+            LEFT JOIN t_task_approved ta ON tj.task_id = ta.task_id
+            LEFT JOIN m_unit_typejob utj ON tj.typej_id = utj.typej_id
+            WHERE SUBSTRING(CONVERT(VARCHAR, tj.task_date_start),1,7) = '".$years."-".$months."'
+		    ORDER BY tj.task_date_start ASC
+            ";
+
+            $date_timeline = "SELECT DISTINCT
+            task_date_start
+            ,CASE WHEN DATENAME(weekday, tj.task_date_start) = 'Monday' THEN 'จันทร์'
+                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Tuesday' THEN 'อังคาร'
+                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Wednesday' THEN 'พุธ'
+                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Thursday' THEN 'พฤหัสบดี'
+                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Friday' THEN 'ศุกร์'
+                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Saterday' THEN 'เสาร์'
+                                                WHEN DATENAME(weekday, tj.task_date_start) = 'Sunday' THEN 'อาทิตย์'
+                                    ELSE '' END AS date_name
+            FROM
+            t_task_job tj
+            WHERE SUBSTRING(CONVERT(VARCHAR, tj.task_date_start),1,7) = '".$years."-".$months."'  ";
+        }else{
+            //Yii::$app->session->setFlash('danger', 'Post Not Complete');
+            $jobTime = "SELECT
             tj.task_id
             ,utj.typej_detail
             ,DATENAME(day, tj.task_date_start) AS date_num
@@ -134,8 +186,6 @@ class TaskjobController extends Controller
 		    ORDER BY tj.task_date_start ASC
             ";
 
-            $times = Yii::$app->db->createCommand($jobTime)->queryAll();
-
             $date_timeline = "SELECT DISTINCT
             task_date_start
             ,CASE WHEN DATENAME(weekday, tj.task_date_start) = 'Monday' THEN 'จันทร์'
@@ -149,6 +199,18 @@ class TaskjobController extends Controller
             FROM
             t_task_job tj
             WHERE tj.task_date_start >= {fn curdate()}  ";
+        }
+        $timeline[][]=[    [
+            [1, 4],
+            [2, 3],
+            [5, 1],
+        ]];
+        //$model = new TaskJob();
+        
+
+            $times = Yii::$app->db->createCommand($jobTime)->queryAll();
+
+            
             $date_tl = Yii::$app->db->createCommand($date_timeline)->queryAll();
             $i=0;
             $r=0;
@@ -179,13 +241,38 @@ class TaskjobController extends Controller
 
             }
         }
-       
+
+        $year_dropdown = "
+        SELECT DISTINCT
+        YEAR(task_date_start) AS task_year
+        FROM
+        t_task_job
+        ORDER BY task_year DESC
+        ";
+
+        $year_list = Yii::$app->db->createCommand($year_dropdown)->queryAll();
+        $month_list = [ ['01','มกราคม'],
+                        ['02','กุมภาพันธ์'],
+                        ['03','มีนาคม'],
+                        ['04','เมษายน'],
+                        ['05','พฤษภาคม'],
+                        ['06','มิถุนายน'],
+                        ['07','กรกฎาคม'],
+                        ['08','สิงหาคม'],
+                        ['09','กันยายน'],
+                        ['10','ตุลาคม'],
+                        ['11','พฤศจิกายน'],
+                        ['12','ธันวาคม']];
+
+        //$default_month ="";
         return $this->render('timeline', [
             'times' => $times,
              'curMount' => $getCurMount,
              'curYear' => $getCurYear,
             'timeline2' => $timeline,
-            'd_timeline' => $date_tl
+            'd_timeline' => $date_tl,
+            'year_list' => $year_list,
+            'month_list' => $month_list
         ]);
 
     }
