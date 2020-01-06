@@ -314,14 +314,17 @@ class SiteController extends Controller
 
         parse_str($_SERVER['QUERY_STRING'], $queries);
         
-        var_dump($queries);
-        $fields = [
-            'grant_type' => 'authorization_code',
-            'code' => $queries['code'],
-            'redirect_uri' => $callback_url,
-            'client_id' => $client_id,
-            'client_secret' => $client_secret
-        ];
+        //var_dump($queries);
+        if(!empty($queries['code'])){
+            $fields = [
+                'grant_type' => 'authorization_code',
+                'code' => $queries['code'],
+                'redirect_uri' => $callback_url,
+                'client_id' => $client_id,
+                'client_secret' => $client_secret
+            ];
+        
+        
         
         try {
             $ch = curl_init();
@@ -370,7 +373,10 @@ class SiteController extends Controller
             'json' => $json,
             'data' => $return_data
         ]);
-        
+    }else{
+        return $this->redirect('index');
+    }
+
         
     }
 
@@ -453,12 +459,15 @@ class SiteController extends Controller
 WHEN utj.unit_id = 41 THEN 'Salmon'
 ELSE '' END tj_color
         ,m_user.user_name
+        ,tj.task_location 
         FROM
         t_task_job tj
         LEFT JOIN t_task_approved ta ON tj.task_id = ta.task_id
         LEFT JOIN m_unit_typejob utj ON tj.typej_id = utj.typej_id
         LEFT JOIN m_user ON tj.task_owner = m_user.user_id
-        --WHERE ta.approved3 IS NOT NULL
+
+        WHERE (tj.task_status > 0 and tj.task_status <> 13)
+
         ";
 
         $times = Yii::$app->db->createCommand($jobTime)->queryAll();
@@ -473,14 +482,18 @@ ELSE '' END tj_color
             $Event = new \yii2fullcalendar\models\Event();
             $Event->id = $time['task_id'];
             $Event->title = $time['typej_detail'];
-            $Event->start = date('Y-m-d\TH:i:s\Z',strtotime(substr($time['task_date_start'],0).' '.substr($time['time_start'],0,5)));
+
+            $Event->start = date('Y-m-d\TH:i:s\Z',strtotime(substr($time['task_date_start'],0).' '.substr($time['time_start'],0)));
             $Event->end = date('Y-m-d\TH:i:s\Z',strtotime(substr($time['task_date_end'],0).' '.substr($time['time_end'],0)));
             $Event->color = $time['tj_color']; //label color
             $Event->nonstandard = $time['user_name'];
-            $Event->textColor = "วันที่ ".$time['task_date_start']." เวลา ".substr($time['time_start'],0,5)." น. ถึงวันที่ ".$time['task_date_end']." เวลา ".substr($time['time_end'],0)." น.";
-           // $Event->url = 'http://google.com/';
+            $Event->textColor = "วันที่ ".$time['task_date_start']." เวลา ".substr($time['time_start'],0,5)." น. <br> ถึง : วันที่ ".$time['task_date_end']." เวลา ".substr($time['time_end'],0,5)." น.";
+            $Event->borderColor = $time['task_location'];
+            
            
             $events[] = $Event;
+            
+
         }
     
         return $events;

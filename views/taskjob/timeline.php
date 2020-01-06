@@ -186,11 +186,16 @@ use app\models\TaskJob;
 
   
     <div class="timeline">
-      <div class="timeline-month">
-        <?=$curMount?>, <?=$curYear?>
-        <span><?=count($times);?> รายการ</span>
-      </div>
-     
+      
+        <div class="timeline-month">
+          <?=$curMount?>, <?=$curYear?>
+          <span><?=count($times);?> รายการ</span>
+          
+        </div>
+        <div class="pull-right">
+              <button class="btn btn-xs btn-primary ">งานสารสนเทศ</button>
+              <button class="btn btn-xs btn-danger ">ประชาสัมพันธ์</button>
+        </div>
       <!-- End Time Line-->
       <?php
 

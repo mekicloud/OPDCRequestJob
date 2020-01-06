@@ -27,7 +27,8 @@
         "yidas/yii2-fontawesome": "^5.0",
         "kartik-v/yii2-grid": "*",
         "philippfrenzel/yii2fullcalendar":"3.9.0",
-        "fedemotta/yii2-widget-datatables": "*"
+        "fedemotta/yii2-widget-datatables": "*",
+        "2amigos/yii2-chartjs-widget": "~2.0"
 
     },
     "require-dev": {

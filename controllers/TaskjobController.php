@@ -179,9 +179,7 @@ class TaskjobController extends Controller
 
             }
         }
-        
-
-
+       
         return $this->render('timeline', [
             'times' => $times,
              'curMount' => $getCurMount,
@@ -240,7 +238,6 @@ class TaskjobController extends Controller
             $token_boss = $this->getAccessToken($boss_id);
             $messages_boss = "มีใบคำร้องเข้ามาใหม่ที่รอการอนุมัติจาก ผอ.กอง";
             $this->actionNotify($token_boss,$messages_boss);
-            
             $session->close();  // close a session
             Yii::$app->session->setFlash('success', 'สร้างใบคำร้องเรียบร้อย');
             return $this->redirect(['index']);
@@ -373,7 +370,7 @@ class TaskjobController extends Controller
             Yii::$app->session->setFlash('success', 'แก้ไขใบคำร้องที่ '. $model->task_id .' เรียบร้อย');
             return $this->redirect(['index']);
         }
-        
+
         return $this->renderAjax('update', [
             'model' => $model,
         ]);
@@ -435,7 +432,6 @@ where leader_type = 6 and task_id = ".$task_id."
         $rankUser = Yii::$app->db->createCommand('SELECT org_id ,leader_type,user_id FROM t_leader WHERE user_id=:id')
             ->bindValue(':id', $session->get('UID'))
             ->queryOne();
-
                             if ($rankUser['leader_type'] == 4 and $rankUser['org_id'] == 37) {
                                 Yii::$app->db->createCommand()
                                     ->update(
@@ -447,6 +443,10 @@ where leader_type = 6 and task_id = ".$task_id."
                                         ],
                                         'task_id = ' . $id
                                     )->execute();
+
+                                    //update task_status = 3 เมื่อ ผอ สลธ approve
+                                    Yii::$app->db->createCommand("UPDATE t_task_job SET task_status = 3 WHERE task_id = ".$id." ")->execute();
+
                                     //send message to task_owner
                                     $task_owner_id = $this->getTaskOwner($id);
                                     $token_o = $this->getAccessToken($task_owner_id);
@@ -468,6 +468,9 @@ where leader_type = 6 and task_id = ".$task_id."
                                         ],
                                         'task_id = ' . $id
                                     )->execute();
+
+                                    //update task_status = 2 เมื่อ ผอ กอง approve
+                                    Yii::$app->db->createCommand("UPDATE t_task_job SET task_status = 2 WHERE task_id = ".$id." ")->execute();
                                     //send message to task_owner
                                     $task_owner_id = $this->getTaskOwner($id);
                                     $token_o = $this->getAccessToken($task_owner_id);
@@ -503,8 +506,7 @@ where leader_type = 6 and task_id = ".$task_id."
                                     )->execute();
                             }
                         $session->close();  // close a session
-                        Yii::$app->session->setFlash('success', 'อนุมัติใบคำร้องที่ '. $id .' เรียบร้อย');
-                        
+                        Yii::$app->session->setFlash('success', 'อนุมัติใบคำร้องที่ '. $id .' เรียบร้อย');           
                         return $this->redirect(['index', '']);
         }
 
@@ -533,6 +535,7 @@ where leader_type = 6 and task_id = ".$task_id."
                         return $this->redirect('index');
         }
 
+
     /**
      * Finds the TaskJob model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
@@ -560,24 +563,6 @@ where leader_type = 6 and task_id = ".$task_id."
         $model = new Notify();
         $json = null;
 
-        //$session = Yii::$app->session;
-        //$session->open(); // open a session
-        //$uid = $session->get('UID');
-        //$rankUser = Yii::$app->db->createCommand('SELECT rank_priority FROM m_rank_user WHERE user_id=:id')
-        //    ->bindValue(':id', $session->get('UID'))
-        //    ->queryOne();
-        /*
-        if ($rankUser['rank_priority'] == 5) { //ผอ กอง
-            $messages = "มีรายการใบคำร้องที่รอการเห็นชอบจากท่าน ผอ.กอง...";
-        } else if ($rankUser['rank_priority'] == 4) { //ผอ สลธ
-            $messages = "มีรายการใบคำร้องที่รอการอนุมัติจากท่าน ผอ.สลธ...";
-        } else if ($rankUser['rank_priority'] == 6) {
-            $messages = "มีรายการใบคำร้องที่รอการกำหนดผู้ปฏิบัติงานจากหัวหน้ากลุ่มงาน...";
-        } else {
-            $messages = "ใบคำร้องได้รับการบันทึกเรียบร้อย...";
-        }
-        */
-        // if($model->load(Yii::$app->request->post())){
         $headers = [
             'Authorization: Bearer ' . $token
         ];
@@ -709,7 +694,7 @@ where leader_type = 6 and task_id = ".$task_id."
                $i++;
             }
             $messages_user = "งาน ".$task_detail['tj_detail']." วันที่ ".$task_detail['tj_date']."หัวหน้างาน Assign เจ้าหน้าที่เรียบร้อย...";
-            $messages_groupIT = "งาน ".$task_detail['tj_detail']." วันที่ ".$task_detail['tj_date']." หัวหน้างาน Assign เจ้าหน้าที่คือ ".$username;
+            
             $task_owner = $this->getTaskOwner($task_id);
             $token_task_owner = $this->getAccessToken($task_owner);
     
@@ -721,6 +706,7 @@ where leader_type = 6 and task_id = ".$task_id."
                 $messages_groupIT = "งาน ".$task_detail['tj_detail']." วันที่ ".$task_detail['tj_date']." หัวหน้างาน Assign เจ้าหน้าที่คือ ".$username;
                // $token_group= $this->getAccessToken('IT');
                 $token_group = "AWZ770a8Hi50sROdOE5FRYD5BUjlg4vRFiZEDa4irhN";
+               // $token_it = "AWZ770a8Hi50sROdOE5FRYD5BUjlg4vRFiZEDa4irhN";
             }elseif($task_unit == 41){
                 $messages_groupIT = "งาน ".$task_detail['tj_detail']." วันที่ ".$task_detail['tj_date']." หัวหน้างาน Assign เจ้าหน้าที่คือ ".$username;
                 $token_group = $this->getAccessToken('AD');
@@ -728,7 +714,8 @@ where leader_type = 6 and task_id = ".$task_id."
             //Line Notify Assign to Task_Owner
             $this->actionNotify($token_task_owner, $messages_user);
             //Line Notify Assign to GroupIT
-            $this->actionNotify($token_it, $messages_groupIT);
+            $this->actionNotify($token_group, $messages_groupIT);
+
             return $this->redirect('index');
     }
 
