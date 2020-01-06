@@ -136,7 +136,7 @@ class TaskJobSearch extends TaskJob
              order by t_task_job.task_id desc";
         } else { // Other User & Capt
             $sql_data = "
-    select distinct task_id,task_detail
+    select distinct t_task_job.task_id,task_detail
             ,typej_id
             ,task_date_start
             ,task_time_start
@@ -152,9 +152,13 @@ class TaskJobSearch extends TaskJob
             left join m_user on t_task_job.task_owner = m_user.user_id
             left join m_org_inner on m_user.cont_to_id = m_org_inner.org_id
             left join t_leader on t_leader.user_id = $uid
-        where m_org_inner.org_id = (select cont_to_id from m_user where user_id = $uid)
-            or parent_id = (select cont_to_id from m_user where user_id = $uid)  
+            left join t_task_approved on t_task_job.task_id = t_task_approved.task_id
+        where (m_org_inner.org_id = ( 
+            select cont_to_id from m_user where user_id = $uid)
+            or parent_id = (select cont_to_id from m_user where user_id = $uid) 
+            )
             and (task_status > 0 and task_status != 13)
+            and approved1 is null
             order by t_task_job.task_id desc
             ";
         }

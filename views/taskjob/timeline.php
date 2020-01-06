@@ -276,9 +276,45 @@ body {
           $datestart = $dtl['task_date_start'];
         ?>
 
-          <div class="timeline-section">
-            <div class="timeline-date">
-              <?= $dtl['date_name'] . " (" . $dtl['task_date_start'] . ")" ?>
+        <div class="timeline-section">
+          <div class="timeline-date">
+            <?=$dtl['date_name']." (".$dtl['task_date_start'].")"?>
+          </div>
+          <div class="row">
+          <?php
+          $count_arr2 = count($timeline2[$datestart]);
+          //$amount_arr = substr($count_arr2,0,0);
+          $row2 = 0;
+          
+          //echo "<br><br><br><br> Count Array".$count_arr2."-----";
+          for($row2 = 0; $row2 < $count_arr2;$row2++ ){
+           // echo " Job : ".$timeline2[$datestart][$row2]['typej_detail'];
+           
+            
+            ?>
+              <div class="col-sm-4">
+              <div class="timeline-box">
+                <div class="box-title">
+                  <i class="fa fa-asterisk text-success" aria-hidden="true"></i> <?= $timeline2[$datestart][$row2]['typej_detail'] ?>
+                  <a class="disabled btn btn-xs btn-<?= $timeline2[$datestart][$row2]['tj_color'] ?> pull-right"><?= $timeline2[$datestart][$row2]['tj_org'] ?></a>
+                </div>
+                <div class="box-content">
+                  
+                  <!--  <div class="box-item"><strong>Loss Type</strong>: A/C Leak</div> -->
+                  <div class="box-item"><strong>สถานที่</strong>: <?= $timeline2[$datestart][$row2]['task_location'] ?></div>
+                  <div class="box-item"><strong>วันเวลา</strong>: <?= $timeline2[$datestart][$row2]['task_date_start'] . ' ' . $timeline2[$datestart][$row2]['time_start'] ?></div>
+                </div>
+                <?php
+                  $assign_user = TaskJob::getAssignuser2($timeline2[$datestart][$row2]['task_id']);
+                  $username = "";
+                  $i = 1;
+                  foreach ($assign_user as $assign_rs) {
+                      $username = $username."<br> (".$i.")".$assign_rs['user_name'];
+                      $i++;
+                  }
+                ?>
+                <div class="box-footer">ผู้ได้รับมอบหมาย :<?=$username?></div>
+              </div>
             </div>
             <div class="row">
               <?php
@@ -328,7 +364,9 @@ body {
 
       </div>
     </div>
-  <?php } ?>
+  </div>
+  </div>
+    <?php } ?>
 </body>
 
 </html>

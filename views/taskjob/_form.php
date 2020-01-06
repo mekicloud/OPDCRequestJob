@@ -116,7 +116,9 @@ use yii\web\JsExpression;
         <div class="col-lg-4 col-md-12 col-xs-12">
             <?= $form->field($model, 'task_personal')->textInput([
                 'type' => 'number',
-                'placeholder' => 'จำนวนคน'
+                'placeholder' => 'จำนวนคน',
+                'min' => 0,
+                'max' => 10
             ])->label('') ?>
         </div>
     </div>
