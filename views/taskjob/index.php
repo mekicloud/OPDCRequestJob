@@ -112,9 +112,21 @@ input[type=submit] {
 
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
 <script type="text/javascript">
+    $(document).ready(function() {
+    $('#taskjob_table').DataTable( {
+        data: rows,
+        destroy: true,
+        columns: columns,
+        responsive: true,
+        columnDefs: [
+            { responsivePriority: 1, targets: 0 },
+            { responsivePriority: 2, targets: 4 }
+        ]
+    } );
+} );
 
         function confirmDisable($task_id) {
             swal.fire({
@@ -246,8 +258,8 @@ input[type=submit] {
             })
            
         }
-     
-    
+        $('#demo').dataTable()
+
 </script>
 <?php $this->registerJs('
         function init_click_handlers(){
@@ -360,6 +372,7 @@ input[type=submit] {
         <div class="panel-body">
         <?php Pjax::begin(['id'=>'taskjob_pjax_id']); ?>
             <?= DataTables::widget([
+                'id' => 'taskjob_table',
                 'dataProvider' => $dataProvider,
                 'filterModel' => $searchModel,
                 'clientOptions' => [
@@ -367,7 +380,11 @@ input[type=submit] {
                     "order" => [[0,'desc']]
                 ],
                 'columns' => [ 
-                   // ['class' => 'yii\grid\SerialColumn'],
+                  //  [
+                        //'class' => 'yii\grid\SerialColumn'
+                       // 'contentOptions'=>[ 'style'=>'width: 100%'], 
+                  //  ],
+                   
                     'task_id',
                     'task_detail',
                     [
@@ -450,8 +467,9 @@ input[type=submit] {
                 ],
                 
             ]); ?>
+     
             <?php Pjax::end() ?>
         </div>
     </div>
-ๅ   ๆ
+
 </div>

@@ -86,9 +86,9 @@ class TaskjobController extends Controller
         ]);
     }
 
-
         public function actionTimeline()
     {
+        $getFunction = new FunctionConfig();
         if(Yii::$app->request->post()){
             $years = Yii::$app->request->post('years');
             $months = Yii::$app->request->post('month');
@@ -145,6 +145,9 @@ class TaskjobController extends Controller
             FROM
             t_task_job tj
             WHERE SUBSTRING(CONVERT(VARCHAR, tj.task_date_start),1,7) = '".$years."-".$months."'  ";
+
+            $getCurMount = $getFunction->getThaiMonth($months);
+            $getCurYear = $getFunction->getThaiYear($years);
         }else{
             //Yii::$app->session->setFlash('danger', 'Post Not Complete');
             $jobTime = "SELECT
@@ -199,6 +202,9 @@ class TaskjobController extends Controller
             FROM
             t_task_job tj
             WHERE tj.task_date_start >= {fn curdate()}  ";
+
+            $getCurMount = $getFunction->getThaiMonth(date('m'));
+            $getCurYear = $getFunction->getThaiYear(date('Y'));
         }
         $timeline[][]=[    [
             [1, 4],
@@ -206,23 +212,14 @@ class TaskjobController extends Controller
             [5, 1],
         ]];
         //$model = new TaskJob();
-        
 
             $times = Yii::$app->db->createCommand($jobTime)->queryAll();
 
-            
             $date_tl = Yii::$app->db->createCommand($date_timeline)->queryAll();
             $i=0;
             $r=0;
             $tmpdate = "";
-            $getFunction = new FunctionConfig();
-            $getCurMount = $getFunction->getThaiMonth(date('m'));
-            $getCurYear = $getFunction->getThaiYear();
             
-                
-           
-       
-
         foreach ($date_tl as $rs_tl) {
             //echo "<br><br><br>" . $rs_tl['task_date_start'];
             foreach ($times as $time2d) {
@@ -237,7 +234,6 @@ class TaskjobController extends Controller
                     $timeline[$d_start][$r] = $time2d;
                     $r++;
                 }
-
 
             }
         }
